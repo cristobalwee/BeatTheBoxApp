@@ -1,0 +1,204 @@
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, Pressable, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { X } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+
+import { useGameContext } from '../context/GameContext';
+import CardPile from './CardPile';
+import DeckCounter from './DeckCounter';
+import { COLORS } from '../constants/colors';
+import { GuessType } from '../types/game';
+import OnboardingOverlay from './OnboardingOverlay';
+import GameOverModal from './GameOverModal';
+import ConfirmationModal from './ConfirmationModal';
+import { isGuessCorrect } from '../utils/card';
+
+interface GameBoardProps {
+  onShowRules: () => void;
+}
+
+const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
+  const {
+    piles,
+    gameState,
+    remainingCards,
+    startNewGame,
+    makeGuess,
+    selectPile,
+    selectedPileIndex,
+    unselectPile,
+    deck,
+  } = useGameContext();
+
+  const [feedbackPileIndex, setFeedbackPileIndex] = useState<number | null>(null);
+  const [feedbackSuccess, setFeedbackSuccess] = useState<boolean | null>(null);
+  const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
+
+  const handleGuess = (pileIndex: number, guessType: GuessType) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    const pile = piles[pileIndex];
+    const topCard = pile.cards[pile.cards.length - 1];
+    const nextCard = deck[0];
+    let isCorrect = false;
+    if (topCard && nextCard) {
+      isCorrect = isGuessCorrect(topCard, nextCard, guessType);
+    }
+    makeGuess(pileIndex, guessType);
+    setTimeout(() => {
+      setFeedbackPileIndex(pileIndex);
+      setFeedbackSuccess(isCorrect);
+      setTimeout(() => {
+        setFeedbackPileIndex(null);
+        setFeedbackSuccess(null);
+      }, 800);
+    }, 300);
+  };
+
+  const handleNewGameConfirm = () => {
+    setShowNewGameConfirm(false);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    startNewGame();
+  };
+
+  const renderPiles = () => {
+    return (
+      <View style={styles.grid}>
+        {piles.map((pile, index) => (
+          <View key={`pile-${index}`} style={styles.pileWrapper}>
+            <CardPile
+              pile={pile}
+              index={index}
+              onSelect={selectPile}
+              onGuess={handleGuess}
+              isSelected={selectedPileIndex === index}
+              dealDelay={index}
+              showFeedback={feedbackPileIndex === index}
+              feedbackSuccess={feedbackSuccess ?? false}
+            />
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Beat the Box</Text>
+        <DeckCounter count={remainingCards} />
+      </View>
+      
+      <View style={styles.boardContainer}>
+        {renderPiles()}
+      </View>
+      
+      <View style={styles.actions}>
+        <Pressable
+          style={styles.newGameButton}
+          onPress={() => setShowNewGameConfirm(true)}
+        >
+          <Text style={styles.buttonText}>New Game</Text>
+        </Pressable>
+        
+        <Pressable onPress={onShowRules} style={styles.rulesButton}>
+          <Text style={styles.rulesText}>How to play</Text>
+        </Pressable>
+      </View>
+
+      <ConfirmationModal
+        visible={showNewGameConfirm}
+        title="Start New Game?"
+        message="Are you sure you want to start a new game? Your current progress will be lost."
+        onConfirm={handleNewGameConfirm}
+        onCancel={() => setShowNewGameConfirm(false)}
+      />
+
+      {(gameState === 'win' || gameState === 'lose') && (
+        <GameOverModal
+          won={gameState === 'win'}
+          onNewGame={startNewGame}
+        />
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+    fontFamily: 'VT323',
+  },
+  boardContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 16,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    aspectRatio: 1,
+    padding: 8,
+  },
+  pileWrapper: {
+    width: '30%',
+    aspectRatio: 2/3,
+  },
+  actions: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    paddingTop: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  newGameButton: {
+    backgroundColor: COLORS.button.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+    fontFamily: 'VT323',
+  },
+  rulesButton: {
+    marginTop: 12,
+    padding: 8,
+  },
+  rulesText: {
+    fontSize: 14,
+    color: COLORS.text.secondary,
+    textDecorationLine: 'underline',
+  },
+});
+
+export default GameBoard;
