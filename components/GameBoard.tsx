@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text.primary,
     fontFamily: 'VT323',
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text.primary,
     fontFamily: 'VT323',
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   rulesText: {
-    fontSize: 14,
+    fontSize: 16,
     color: COLORS.text.secondary,
     textDecorationLine: 'underline',
   },

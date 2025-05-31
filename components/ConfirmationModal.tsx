@@ -26,16 +26,16 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         
         <View style={styles.buttonContainer}>
           <Pressable 
-            style={[styles.button, styles.cancelButton]} 
-            onPress={onCancel}
-          >
-            <Text style={[styles.buttonText, styles.cancelText]}>Cancel</Text>
-          </Pressable>
-          <Pressable 
             style={[styles.button, styles.confirmButton]} 
             onPress={onConfirm}
           >
             <Text style={styles.buttonText}>Confirm</Text>
+          </Pressable>
+          <Pressable 
+            style={[styles.button, styles.cancelButton]} 
+            onPress={onCancel}
+          >
+            <Text style={[styles.buttonText, styles.cancelText]}>Cancel</Text>
           </Pressable>
         </View>
       </View>
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 12,
     width: '100%',
   },
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: COLORS.text.primary,
-    fontSize: 16,
+    fontSize: 24,
     fontFamily: 'VT323',
   },
   cancelText: {

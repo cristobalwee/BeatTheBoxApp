@@ -129,6 +129,20 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
       <Animated.View
         style={[
           styles.card,
+          styles.cardBack,
+          backAnimatedStyle,
+          { position: 'absolute' }
+        ]}
+      >
+        <Image
+          source={require('../assets/images/Playing_Cards_Back_Cover.jpg')}
+          style={styles.cardBackImage}
+          resizeMode="cover"
+        />
+      </Animated.View>
+      <Animated.View
+        style={[
+          styles.card,
           { backgroundColor: cardBackgroundColor },
           frontAnimatedStyle
         ]}
@@ -194,20 +208,20 @@ const styles = StyleSheet.create({
   },
   valueTopLeft: {
     position: 'absolute',
-    top: 5,
-    left: 5,
-    fontSize: 28,
+    top: 6,
+    left: 6,
+    fontSize: 32,
     fontFamily: 'VT323',
   },
   valueBottomRight: {
     position: 'absolute',
-    bottom: 5,
-    right: 5,
-    fontSize: 28,
+    bottom: 6,
+    right: 6,
+    fontSize: 32,
     fontFamily: 'VT323',
   },
   suitSymbol: {
-    fontSize: 42,
+    fontSize: 38,
     fontWeight: 'bold',
   },
 });

@@ -41,14 +41,14 @@ const DeckCounter: React.FC<DeckCounterProps> = ({ count, totalCards = 52 }) => 
   
   return (
     <View style={styles.container}>
+      <Animated.Text style={[styles.counter, counterStyle]}>
+        {count}
+      </Animated.Text>
       <View style={styles.deckIcon}>
         <View style={styles.card1} />
         <View style={styles.card2} />
         <View style={styles.card3} />
       </View>
-      <Animated.Text style={[styles.counter, counterStyle]}>
-        {count}
-      </Animated.Text>
     </View>
   );
 };
@@ -63,15 +63,15 @@ const styles = StyleSheet.create({
     width: 30,
     height: 40,
     position: 'relative',
-    marginRight: 5,
+    marginLeft: 8,
   },
   card1: {
     width: 24,
     height: 34,
     backgroundColor: COLORS.card.backside,
     borderRadius: 3,
-    borderWidth: 1,
-    borderColor: '#000',
+    borderWidth: 0.25,
+    borderColor: '#fff',
     position: 'absolute',
     top: 0,
     left: 0,
@@ -81,8 +81,8 @@ const styles = StyleSheet.create({
     height: 34,
     backgroundColor: COLORS.card.backside,
     borderRadius: 3,
-    borderWidth: 1,
-    borderColor: '#000',
+    borderWidth: 0.25,
+    borderColor: '#fff',
     position: 'absolute',
     top: 2,
     left: 2,
@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
     height: 34,
     backgroundColor: COLORS.card.backside,
     borderRadius: 3,
-    borderWidth: 1,
-    borderColor: '#000',
+    borderWidth: 0.25,
+    borderColor: '#fff',
     position: 'absolute',
     top: 4,
     left: 4,

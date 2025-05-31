@@ -11,14 +11,24 @@ interface OnboardingOverlayProps {
 const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onDismiss }) => {
   return (
     <BottomSheet visible={visible} onClose={onDismiss} snapPoints={[0.9]}>
-      <View style={styles.content}>
-        <Text style={styles.title}>How to Play</Text>
-        
-        <ScrollView style={styles.scrollView}>
-          <Text style={styles.subtitle}>Beat the Box</Text>
+        <View 
+          style={styles.scrollView}
+        >
+          <Text style={styles.title}>How to Play</Text>
           <Text style={styles.paragraph}>
             Beat the Box is a card game where your goal is to correctly guess whether the next card 
             from the deck will be higher, lower, or the same value as the current card.
+          </Text>
+
+          <Text style={styles.sectionTitle}>Controls:</Text>
+          <Text style={styles.paragraph}>
+            🔘 Tap a card to see options (Higher, Lower, Same)
+          </Text>
+          <Text style={styles.paragraph}>
+            ⬆️ Swipe up on a card to guess higher
+          </Text>
+          <Text style={styles.paragraph}>
+            ⬇️ Swipe down on a card to guess lower
           </Text>
           
           <Text style={styles.sectionTitle}>Rules:</Text>
@@ -45,37 +55,24 @@ const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onDismis
           <Text style={styles.paragraph}>
             • A (Ace) = 1, 2-10 = face value, J (Jack) = 11, Q (Queen) = 12, K (King) = 13
           </Text>
-          
-          <Text style={styles.sectionTitle}>Controls:</Text>
-          <Text style={styles.paragraph}>
-            • Tap a card to see options (Higher, Lower, Same)
-          </Text>
-          <Text style={styles.paragraph}>
-            • Swipe up on a card to guess higher
-          </Text>
-          <Text style={styles.paragraph}>
-            • Swipe down on a card to guess lower
-          </Text>
-          <Text style={styles.paragraph}>
-            • Double-tap a card to guess same
-          </Text>
-        </ScrollView>
+        </View>
         
-        <Pressable style={styles.dismissButton} onPress={onDismiss}>
-          <Text style={styles.dismissButtonText}>Got it</Text>
-        </Pressable>
-      </View>
+        <View style={styles.footer}>
+          <Pressable style={styles.dismissButton} onPress={onDismiss}>
+            <Text style={styles.dismissButtonText}>Got it</Text>
+          </Pressable>
+        </View>
     </BottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
-  content: {
+  container: {
     flex: 1,
-    padding: 24,
+    paddingTop: 24,
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
     color: COLORS.text.primary,
     marginBottom: 16,
@@ -83,7 +80,8 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    marginBottom: 16,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
   subtitle: {
     fontSize: 20,
@@ -93,7 +91,7 @@ const styles = StyleSheet.create({
     fontFamily: 'VT323',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text.primary,
     marginTop: 16,
@@ -106,6 +104,12 @@ const styles = StyleSheet.create({
     color: COLORS.text.secondary,
     marginBottom: 8,
   },
+  footer: {
+    padding: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
   dismissButton: {
     backgroundColor: COLORS.button.primary,
     padding: 12,
@@ -115,7 +119,7 @@ const styles = StyleSheet.create({
   },
   dismissButtonText: {
     color: COLORS.text.primary,
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: 'bold',
     fontFamily: 'VT323',
   },

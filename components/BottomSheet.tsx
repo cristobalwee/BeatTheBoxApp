@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect } from 'react';
-import { StyleSheet, View, Text, Pressable, Platform, Dimensions } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, View, Text, Pressable, Platform, Dimensions, ScrollView } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withTiming,
   interpolate,
   Extrapolate,
   runOnJS,
@@ -28,28 +29,52 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   children,
   snapPoints = [0.9],
 }) => {
-  const translateY = useSharedValue(0);
+  const translateY = useSharedValue(SCREEN_HEIGHT);
   const active = useSharedValue(false);
   const context = useSharedValue({ y: 0 });
+  const opacity = useSharedValue(0);
+  const [isRendered, setIsRendered] = useState(false);
 
-  const scrollTo = useCallback((destination: number) => {
+  const scrollTo = useCallback((destination: number, shouldAnimate = true) => {
     'worklet';
-    active.value = destination !== 0;
-    translateY.value = withSpring(destination, {
-      damping: 20,
-      stiffness: 300,
-      mass: 0.8,
-    });
+    active.value = destination !== SCREEN_HEIGHT;
+    
+    if (shouldAnimate) {
+      translateY.value = withSpring(destination, {
+        damping: 50,
+        stiffness: 400,
+        mass: 1,
+        restDisplacementThreshold: 0.2,
+        restSpeedThreshold: 0.2,
+      });
+      opacity.value = withTiming(destination === SCREEN_HEIGHT ? 0 : 0.7, {
+        duration: 250
+      });
+    } else {
+      translateY.value = destination;
+      opacity.value = destination === SCREEN_HEIGHT ? 0 : 0.7;
+    }
   }, []);
 
+  const handleClose = useCallback(() => {
+    scrollTo(SCREEN_HEIGHT);
+    setTimeout(() => {
+      setIsRendered(false);
+      onClose();
+    }, 300);
+  }, [onClose, scrollTo]);
+
   useEffect(() => {
-    if (visible) {
-      const snapPoint = snapPoints[0];
-      scrollTo(-(SCREEN_HEIGHT * snapPoint));
-    } else {
-      scrollTo(0);
+    if (visible && !isRendered) {
+      setIsRendered(true);
+      requestAnimationFrame(() => {
+        const snapPoint = snapPoints[0];
+        scrollTo(-(SCREEN_HEIGHT * snapPoint));
+      });
+    } else if (!visible && isRendered) {
+      handleClose();
     }
-  }, [visible]);
+  }, [visible, isRendered]);
 
   const gesture = Gesture.Pan()
     .onStart(() => {
@@ -57,11 +82,18 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     })
     .onUpdate((event) => {
       translateY.value = event.translationY + context.value.y;
-      translateY.value = Math.max(MAX_TRANSLATE_Y, translateY.value);
+      translateY.value = Math.max(MAX_TRANSLATE_Y, Math.min(translateY.value, SCREEN_HEIGHT));
+      
+      opacity.value = interpolate(
+        translateY.value,
+        [SCREEN_HEIGHT, SCREEN_HEIGHT * 0.7],
+        [0, 0.7],
+        Extrapolate.CLAMP
+      );
     })
     .onEnd((event) => {
       if (event.velocityY > 500 || event.translationY > SCREEN_HEIGHT * 0.2) {
-        runOnJS(onClose)();
+        runOnJS(handleClose)();
       } else {
         const snapPoint = snapPoints[0];
         scrollTo(-(SCREEN_HEIGHT * snapPoint));
@@ -84,34 +116,30 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
 
   const rBackdropStyle = useAnimatedStyle(() => {
     return {
-      opacity: withSpring(
-        interpolate(
-          translateY.value,
-          [0, -SCREEN_HEIGHT * 0.4],
-          [0, 0.7],
-          Extrapolate.CLAMP
-        ),
-        { damping: 15, stiffness: 200 }
-      ),
+      opacity: opacity.value,
     };
   });
 
   const BlurComponent = Platform.OS === 'web' ? View : BlurView;
   const blurProps = Platform.OS === 'web'
     ? { style: [styles.backdrop, rBackdropStyle, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }] }
-    : { style: [styles.backdrop, rBackdropStyle], intensity: 15, tint: "dark" };
+    : { style: [styles.backdrop, rBackdropStyle], intensity: 15, tint: "dark" as const };
 
-  if (!visible) return null;
+  if (!isRendered) return null;
 
   return (
-    <View style={styles.container}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
-        <BlurComponent {...blurProps} />
+    <View style={styles.container} pointerEvents={visible ? 'auto' : 'none'}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}>
+        <Animated.View style={StyleSheet.absoluteFill}>
+          <BlurComponent {...blurProps} />
+        </Animated.View>
       </Pressable>
       <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.bottomSheetContainer, rBottomSheetStyle]}>
           <View style={styles.line} />
-          {children}
+          <ScrollView style={styles.contentContainer}>
+            {children}
+          </ScrollView>
         </Animated.View>
       </GestureDetector>
     </View>
@@ -133,19 +161,23 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: Platform.OS === 'web' ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
   },
   bottomSheetContainer: {
     height: SCREEN_HEIGHT,
     width: '100%',
-    backgroundColor: COLORS.background,
+    backgroundColor: '#2E334F',
     position: 'absolute',
     top: SCREEN_HEIGHT,
-    borderRadius: 25,
+    borderRadius: 32,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
+  contentContainer: {
+    flex: 1,
+  },
   line: {
-    width: 75,
+    width: 40,
     height: 4,
     backgroundColor: 'rgba(255,255,255,0.3)',
     alignSelf: 'center',
