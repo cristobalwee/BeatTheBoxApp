@@ -129,20 +129,6 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
       <Animated.View
         style={[
           styles.card,
-          styles.cardBack,
-          backAnimatedStyle,
-          { position: 'absolute' }
-        ]}
-      >
-        <Image
-          source={require('../assets/images/Playing_Cards_Back_Cover.jpg')}
-          style={styles.cardBackImage}
-          resizeMode="cover"
-        />
-      </Animated.View>
-      <Animated.View
-        style={[
-          styles.card,
           { backgroundColor: cardBackgroundColor },
           frontAnimatedStyle
         ]}

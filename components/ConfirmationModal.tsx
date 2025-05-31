@@ -45,7 +45,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
 const styles = StyleSheet.create({
   content: {
-    padding: 24,
+    paddingHorizontal: 24,
     alignItems: 'center',
   },
   title: {
