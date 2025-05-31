@@ -106,9 +106,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 24,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    paddingTop: 8,
   },
   dismissButton: {
     backgroundColor: COLORS.button.primary,

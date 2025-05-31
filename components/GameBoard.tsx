@@ -149,20 +149,22 @@ const styles = StyleSheet.create({
   boardContainer: {
     flex: 1,
     justifyContent: 'flex-start',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    height: '100%',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
     aspectRatio: 1,
-    padding: 8,
   },
   pileWrapper: {
     width: '30%',
-    aspectRatio: 2/3,
+    maxHeight: '40%',
+    // aspectRatio: 2/3,
   },
   actions: {
     paddingHorizontal: 24,

@@ -10,7 +10,7 @@ interface GameOverModalProps {
 
 const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame }) => {
   return (
-    <BottomSheet visible={true} onClose={onNewGame} snapPoints={[0.4]}>
+    <BottomSheet visible={true} onClose={onNewGame} snapPoints={[0.35]}>
       <View style={styles.content}>
         <Text style={styles.title}>
           {won ? '🎉 You Win! 🎉' : 'Game Over'}
@@ -32,14 +32,13 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame }) => {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 24,
-    alignItems: 'center',
+    paddingHorizontal: 24,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text.primary,
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
     fontFamily: 'VT323',
   },
@@ -55,14 +54,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    minWidth: 150,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+    width: '100%',
   },
   buttonText: {
     color: COLORS.text.primary,
-    fontSize: 16,
+    fontSize: 24,
+    width: '100%',
     fontWeight: 'bold',
     fontFamily: 'VT323',
+    textAlign: 'center',
   },
 });
 

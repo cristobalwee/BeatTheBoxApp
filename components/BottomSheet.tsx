@@ -168,7 +168,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
           <AnimatedReanimated.ScrollView
             style={styles.contentContainer}
             contentContainerStyle={{ paddingBottom: 32 + insets.bottom }}
-            bounces={false}
+            bounces={true}
             showsVerticalScrollIndicator={false}
             scrollEventThrottle={16}
             onScroll={handleScroll}
