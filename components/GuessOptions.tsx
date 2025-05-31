@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
   withSpring,
   Easing,
+  withDelay,
 } from 'react-native-reanimated';
 import { GuessType } from '../types/game';
 import { COLORS } from '../constants/colors';
@@ -15,46 +16,50 @@ interface GuessOptionsProps {
   onSelect: (guessType: GuessType) => void;
 }
 
+const BUTTONS = [
+  { type: 'higher' as GuessType, icon: <ArrowUp color="white" size={24} />, bg: COLORS.button.higher },
+  { type: 'same' as GuessType, icon: <Equal color="black" size={24} />, bg: COLORS.button.same },
+  { type: 'lower' as GuessType, icon: <ArrowDown color="white" size={24} />, bg: COLORS.button.lower },
+];
+
 const GuessOptions: React.FC<GuessOptionsProps> = ({ onSelect }) => {
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.8);
+  // Overlay fade
+  const overlayOpacity = useSharedValue(0);
+  // Button scales
+  const buttonScales = BUTTONS.map(() => useSharedValue(0.7));
 
   React.useEffect(() => {
-    opacity.value = withTiming(1, { duration: 150 });
-    scale.value = withSpring(1, {
-      damping: 12,
-      stiffness: 100,
+    overlayOpacity.value = withTiming(1, { duration: 180 });
+    BUTTONS.forEach((_, i) => {
+      buttonScales[i].value = withDelay(
+        80 * i,
+        withSpring(1, { damping: 12, stiffness: 120 })
+      );
     });
   }, []);
 
-  const containerStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      transform: [{ scale: scale.value }],
-    };
-  });
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
 
   return (
-    <Animated.View style={[styles.container, containerStyle]}>
-      <View style={styles.optionsRow}>
-        <Pressable
-          style={[styles.optionButton, { backgroundColor: COLORS.button.higher }]}
-          onPress={() => onSelect('higher')}
-        >
-          <ArrowUp color="white" size={24} />
-        </Pressable>
-        <Pressable
-          style={[styles.optionButton, { backgroundColor: COLORS.button.same }]}
-          onPress={() => onSelect('same')}
-        >
-          <Equal color="black" size={24} />
-        </Pressable>
-        <Pressable
-          style={[styles.optionButton, { backgroundColor: COLORS.button.lower }]}
-          onPress={() => onSelect('lower')}
-        >
-          <ArrowDown color="white" size={24} />
-        </Pressable>
+    <Animated.View style={[styles.container, overlayStyle]}>
+      <View style={styles.optionsColumn}>
+        {BUTTONS.map((btn, i) => {
+          const animatedBtnStyle = useAnimatedStyle(() => ({
+            transform: [{ scale: buttonScales[i].value }],
+          }));
+          return (
+            <Animated.View key={btn.type} style={[styles.animatedButton, animatedBtnStyle]}>
+              <Pressable
+                style={[styles.optionButton, { backgroundColor: btn.bg }]}
+                onPress={() => onSelect(btn.type)}
+              >
+                {btn.icon}
+              </Pressable>
+            </Animated.View>
+          );
+        })}
       </View>
     </Animated.View>
   );
@@ -72,14 +77,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
     borderRadius: 8,
   },
-  optionsRow: {
-    flexDirection: 'row',
-    gap: 8,
+  optionsColumn: {
+    flexDirection: 'column',
+    gap: 12,
+    alignItems: 'center',
+  },
+  animatedButton: {
+    width: '100%',
+    alignItems: 'center',
   },
   optionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
