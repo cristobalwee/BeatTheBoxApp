@@ -82,9 +82,9 @@ const FeedbackIndicator: React.FC<FeedbackIndicatorProps> = ({ success, style })
 
 const styles = StyleSheet.create({
   container: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 64,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

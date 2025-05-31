@@ -117,13 +117,13 @@ const CardPile: React.FC<CardPileProps> = ({
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.container, animatedStyle]}>
+        <View style={styles.feedbackIndicatorContainer}>
         {showFeedback && (
           <FeedbackIndicator
             success={!!feedbackSuccess}
-            style={styles.feedbackIndicator}
           />
         )}
-
+        </View>
         <Card
           card={topCard}
           isDisabled={disabled}
@@ -154,12 +154,14 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  feedbackIndicator: {
+  feedbackIndicatorContainer: {
     position: 'absolute',
+    width: '100%',
     top: -20,
-    left: '50%',
     zIndex: 10,
-    transform: [{ translateX: -10 }],
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
 });
 
