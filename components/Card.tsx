@@ -22,30 +22,46 @@ interface CardProps {
 }
 
 const SuitSymbol = ({ suit }: { suit: Suit }) => {
-  let symbol = '';
+  let symbol: React.ReactNode = '';
   
   switch (suit) {
     case 'hearts':
-      symbol = '♥';
+      symbol = (
+        <Image
+          source={require('../assets/images/heart.png')}
+          style={styles.suitSymbol}
+        />
+      );
       break;
     case 'diamonds':
-      symbol = '♦';
+      symbol = (
+        <Image
+          source={require('../assets/images/diamond.png')}
+          style={styles.suitSymbol}
+        />
+      );
       break;
     case 'clubs':
-      symbol = '♣';
+      symbol = (
+        <Image
+          source={require('../assets/images/club.png')}
+          style={styles.suitSymbol}
+        />
+      );
       break;
     case 'spades':
-      symbol = '♠';
+      symbol = (
+        <Image
+          source={require('../assets/images/spade.png')}
+          style={styles.suitSymbol}
+        />
+      );
       break;
     default:
       symbol = '';
   }
   
-  return (
-    <Text style={[styles.suitSymbol, { color: COLORS.suit[suit] }]}>
-      {symbol}
-    </Text>
-  );
+  return symbol;
 };
 
 const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComplete }) => {
@@ -59,6 +75,15 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
   const dealOpacity = useSharedValue(1);
   const prevCardRef = React.useRef(card);
 
+  // Sync spin with flipped prop
+  React.useEffect(() => {
+    if (flipped) {
+      spin.value = withTiming(180, { duration: 400 });
+    } else {
+      spin.value = withTiming(0, { duration: 400 });
+    }
+  }, [flipped]);
+
   React.useEffect(() => {
     // If the card identity changes, trigger deal animation
     if (prevCardRef.current !== card) {
@@ -67,31 +92,26 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
       dealTranslateY.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.back(1.1)) });
       dealOpacity.value = withTiming(1, { duration: 400 });
       prevCardRef.current = card;
-    }
-  }, [card, dealTranslateY, dealOpacity]);
 
-  React.useEffect(() => {
-    if (flipped) {
-      spin.value = withDelay(
-        500,
-        withSequence(
-          withTiming(180, { duration: 300 }),
-          withTiming(170, { duration: 100 }),
-          withTiming(190, { duration: 100 }),
-          withTiming(180, { duration: 100 }, (finished) => {
-            if (finished && onFlipComplete) {
-              runOnJS(onFlipComplete)();
-            }
-          })
-        )
-      );
-    } else {
-      bounce.value = withSequence(
-        withTiming(1.1, { duration: 150 }),
-        withTiming(1, { duration: 150 })
-      );
+      if (isDisabled) {
+        spin.value = withDelay(
+          1000,
+          withSequence(
+            withTiming(180, { duration: 500 }),
+            withTiming(170, { duration: 200 }),
+            withTiming(190, { duration: 200 }),
+            withTiming(180, { duration: 200 }, (finished) => {
+              if (finished && onFlipComplete) {
+                runOnJS(onFlipComplete)();
+              }
+            })
+          )
+        );
+      } else {
+        spin.value = 0;
+      }
     }
-  }, [flipped]);
+  }, [card, dealTranslateY, dealOpacity, isDisabled]);
   
   const frontAnimatedStyle = useAnimatedStyle(() => {
     const interpolatedRotate = interpolate(
@@ -113,6 +133,7 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
         [1, 0, 0],
         Extrapolate.CLAMP
       ),
+      backfaceVisibility: 'hidden',
     };
   });
   
@@ -135,7 +156,12 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
         [0, 0, 1],
         Extrapolate.CLAMP
       ),
-      backfaceVisibility: 'hidden' as const,
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      top: 0,
+      left: 0,
+      backfaceVisibility: 'hidden',
     };
   });
   
@@ -145,6 +171,19 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
   
   return (
     <View style={[styles.cardContainer, style]}>
+      {/* Card Back */}
+      <Animated.View
+        style={[
+          styles.card,
+          styles.cardBack,
+          backAnimatedStyle
+        ]}
+      >
+        <Text style={styles.backText}> 
+          B
+        </Text>
+      </Animated.View>
+      {/* Card Front */}
       <Animated.View
         style={[
           styles.card,
@@ -152,28 +191,13 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
           frontAnimatedStyle
         ]}
       >
-        <Text style={[styles.valueTopLeft, { color: COLORS.suit[suit] }]}>
+        <Text style={[styles.value,styles.valueTopLeft, { color: COLORS.suit[suit] }]}> 
           {value}
         </Text>
         <SuitSymbol suit={suit} />
-        <Text style={[styles.valueBottomRight, { color: COLORS.suit[suit] }]}>
+        <Text style={[styles.value, styles.valueBottomRight, { color: COLORS.suit[suit] }]}> 
           {value}
         </Text>
-      </Animated.View>
-      
-      <Animated.View
-        style={[
-          styles.card,
-          styles.cardBack,
-          backAnimatedStyle,
-          { position: 'absolute' }
-        ]}
-      >
-        <Image
-          source={require('../assets/images/Playing_Cards_Back_Cover.jpg')}
-          style={styles.cardBackImage}
-          resizeMode="cover"
-        />
       </Animated.View>
     </View>
   );
@@ -206,27 +230,33 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardBackImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 7,
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    opacity: 0.8,
+  },
+  value: {
+    position: 'absolute',
+    fontSize: 32,
+    fontFamily: 'VT323',
   },
   valueTopLeft: {
-    position: 'absolute',
     top: 6,
     left: 6,
-    fontSize: 32,
-    fontFamily: 'VT323',
   },
   valueBottomRight: {
-    position: 'absolute',
     bottom: 6,
     right: 6,
-    fontSize: 32,
-    fontFamily: 'VT323',
   },
   suitSymbol: {
-    fontSize: 38,
-    fontWeight: 'bold',
+    width: 48,
+    height: 48,
+  },
+  backText: {
+    color: '#fff',
+    fontSize: 32,
+    fontFamily: 'VT323',
+    opacity: 0.4
   },
 });
 

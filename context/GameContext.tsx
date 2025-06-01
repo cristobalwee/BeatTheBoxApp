@@ -44,7 +44,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     for (let i = 0; i < 9; i++) {
       const card = remainingDeck.shift();
       initialPiles.push({
-        cards: card ? [card] : [],
+        cards: card ? [{ ...card, flipped: false }] : [],
         flipped: false,
         disabled: false,
       });

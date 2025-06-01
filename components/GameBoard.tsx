@@ -12,6 +12,7 @@ import GameOverModal from './GameOverModal';
 import ConfirmationModal from './ConfirmationModal';
 import { isGuessCorrect } from '../utils/card';
 import StatsOverlay from './StatsOverlay';
+import { updateStatsOnGameEnd } from '../utils/stats';
 
 interface GameBoardProps {
   onShowRules: () => void;
@@ -60,7 +61,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     }, 600);
   };
 
-  const handleNewGameConfirm = () => {
+  const handleNewGameConfirm = (won: boolean, pilesRemaining: number) => {
+    updateStatsOnGameEnd(won, pilesRemaining);
     setShowNewGameConfirm(false);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -124,7 +126,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
         visible={showNewGameConfirm}
         title="Start New Game?"
         message="Are you sure you want to start a new game? Your current progress will be lost."
-        onConfirm={handleNewGameConfirm}
+        onConfirm={() => handleNewGameConfirm(gameState === 'win', piles.filter(p => !p.flipped).length)}
         onCancel={() => setShowNewGameConfirm(false)}
       />
 
