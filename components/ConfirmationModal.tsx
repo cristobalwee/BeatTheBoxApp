@@ -46,20 +46,20 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   title: {
     fontSize: 24,
     color: COLORS.text.primary,
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: 'left',
     fontFamily: 'VT323',
   },
   message: {
     fontSize: 16,
     color: COLORS.text.secondary,
     marginBottom: 24,
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 22,
   },
   buttonContainer: {

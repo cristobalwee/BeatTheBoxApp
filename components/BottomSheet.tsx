@@ -162,7 +162,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
             style={styles.closeButton}
             hitSlop={16}
           >
-            <X color="white" size={28} />
+            <X color="white" size={20} />
           </Pressable>
           <View style={styles.line} />
           <AnimatedReanimated.ScrollView
@@ -222,9 +222,9 @@ const styles = StyleSheet.create({
     top: 12,
     right: 16,
     zIndex: 20,
-    backgroundColor: 'rgba(44,44,64,0.7)',
+    backgroundColor: COLORS.background,
     borderRadius: 20,
-    padding: 4,
+    padding: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },

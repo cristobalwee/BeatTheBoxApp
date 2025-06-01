@@ -26,14 +26,14 @@ const GuessOptions: React.FC<GuessOptionsProps> = ({ onSelect }) => {
   // Overlay fade
   const overlayOpacity = useSharedValue(0);
   // Button scales
-  const buttonScales = BUTTONS.map(() => useSharedValue(0.7));
+  const buttonScales = BUTTONS.map(() => useSharedValue(0.9));
 
   React.useEffect(() => {
     overlayOpacity.value = withTiming(1, { duration: 180 });
     BUTTONS.forEach((_, i) => {
       buttonScales[i].value = withDelay(
         80 * i,
-        withSpring(1, { damping: 12, stiffness: 120 })
+        withSpring(1, { damping: 12, stiffness: 90 })
       );
     });
   }, []);
@@ -87,9 +87,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

@@ -43,8 +43,9 @@ const CardPile: React.FC<CardPileProps> = ({
   const isEmptyPile = cards.length === 0;
 
   // Animation values
-  const scale = useSharedValue(0);
-  const translateY = useSharedValue(-300);
+  const scale = useSharedValue(0.8);
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(-200);
   // Add scale for selection
   const selectedScale = useSharedValue(1);
 
@@ -52,9 +53,10 @@ const CardPile: React.FC<CardPileProps> = ({
     const delay = dealDelay * 100;
     translateY.value = withDelay(
       delay,
-      withTiming(0, { duration: 300, easing: Easing.out(Easing.back(1.5)) })
+      withTiming(0, { duration: 300, easing: Easing.out(Easing.back(1.1)) })
     );
     scale.value = withDelay(delay, withTiming(1, { duration: 300 }));
+    opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
   }, [dealDelay]);
 
   // Animate scale up/down on selection
@@ -72,6 +74,7 @@ const CardPile: React.FC<CardPileProps> = ({
         { translateY: translateY.value },
         { scale: scale.value * selectedScale.value },
       ],
+      opacity: opacity.value,
       zIndex: isSelected ? 10 : 1,
     };
   });
