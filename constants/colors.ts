@@ -2,7 +2,7 @@ export const COLORS = {
   background: '#222639',
   card: {
     background: '#FFFFFF',
-    backside: '#2B4D90',
+    backside: '#445AA4',
     disabled: '#8899AA',
   },
   suit: {
