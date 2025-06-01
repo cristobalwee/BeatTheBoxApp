@@ -54,7 +54,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
         setFeedbackPileIndex(null);
         setFeedbackSuccess(null);
       }, 800);
-    }, 300);
+    }, 600);
   };
 
   const handleNewGameConfirm = () => {

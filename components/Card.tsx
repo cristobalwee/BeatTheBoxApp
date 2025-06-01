@@ -9,6 +9,7 @@ import Animated, {
   interpolate,
   Extrapolate,
   runOnJS,
+  Easing,
 } from 'react-native-reanimated';
 import { Card as CardType, Suit } from '../types/game';
 import { COLORS } from '../constants/colors';
@@ -53,6 +54,22 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
   const spin = useSharedValue(flipped ? 180 : 0);
   const bounce = useSharedValue(1);
   
+  // --- Deal Animation ---
+  const dealTranslateY = useSharedValue(0);
+  const dealOpacity = useSharedValue(1);
+  const prevCardRef = React.useRef(card);
+
+  React.useEffect(() => {
+    // If the card identity changes, trigger deal animation
+    if (prevCardRef.current !== card) {
+      dealTranslateY.value = -50;
+      dealOpacity.value = 0;
+      dealTranslateY.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.back(1.1)) });
+      dealOpacity.value = withTiming(1, { duration: 400 });
+      prevCardRef.current = card;
+    }
+  }, [card, dealTranslateY, dealOpacity]);
+
   React.useEffect(() => {
     if (flipped) {
       spin.value = withDelay(
@@ -85,11 +102,12 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
     );
     return {
       transform: [
+        { translateY: dealTranslateY.value },
         { scale: bounce.value },
         { perspective: 1000 },
         { rotateY: `${interpolatedRotate}deg` }
       ],
-      opacity: interpolate(
+      opacity: dealOpacity.value * interpolate(
         spin.value,
         [0, 90, 180],
         [1, 0, 0],
@@ -107,10 +125,11 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
     );
     return {
       transform: [
+        { translateY: dealTranslateY.value },
         { perspective: 1000 },
         { rotateY: `${interpolatedRotate}deg` }
       ],
-      opacity: interpolate(
+      opacity: dealOpacity.value * interpolate(
         spin.value,
         [0, 90, 180],
         [0, 0, 1],
@@ -165,7 +184,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 8,
-    overflow: 'hidden',
   },
   card: {
     width: '100%',
