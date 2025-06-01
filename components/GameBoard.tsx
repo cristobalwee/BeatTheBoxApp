@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { X } from 'lucide-react-native';
+import { CircleHelp, ChartNoAxesColumn } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 
 import { useGameContext } from '../context/GameContext';
@@ -9,10 +8,10 @@ import CardPile from './CardPile';
 import DeckCounter from './DeckCounter';
 import { COLORS } from '../constants/colors';
 import { GuessType } from '../types/game';
-import OnboardingOverlay from './OnboardingOverlay';
 import GameOverModal from './GameOverModal';
 import ConfirmationModal from './ConfirmationModal';
 import { isGuessCorrect } from '../utils/card';
+import StatsOverlay from './StatsOverlay';
 
 interface GameBoardProps {
   onShowRules: () => void;
@@ -34,6 +33,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
   const [feedbackPileIndex, setFeedbackPileIndex] = useState<number | null>(null);
   const [feedbackSuccess, setFeedbackSuccess] = useState<boolean | null>(null);
   const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
+  const [showStatsOverlay, setShowStatsOverlay] = useState(false);
 
   const handleGuess = (pileIndex: number, guessType: GuessType) => {
     if (Platform.OS !== 'web') {
@@ -50,6 +50,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     setTimeout(() => {
       setFeedbackPileIndex(pileIndex);
       setFeedbackSuccess(isCorrect);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       setTimeout(() => {
         setFeedbackPileIndex(null);
         setFeedbackSuccess(null);
@@ -105,9 +108,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
           <Text style={styles.buttonText}>New Game</Text>
         </Pressable>
         
-        <Pressable onPress={onShowRules} style={styles.rulesButton}>
-          <Text style={styles.rulesText}>How to play</Text>
-        </Pressable>
+        <View style={styles.buttonContainer}>
+          <Pressable onPress={onShowRules} style={styles.tertiaryButton}>
+            <CircleHelp size={20} color={COLORS.text.secondary} />
+            <Text style={styles.tertiaryButtonText}>How to play</Text>
+          </Pressable>
+          <Pressable onPress={() => setShowStatsOverlay(true)} style={styles.tertiaryButton}>
+            <ChartNoAxesColumn size={20} color={COLORS.text.secondary} />
+            <Text style={styles.tertiaryButtonText}>Your stats</Text>
+          </Pressable>
+        </View>
       </View>
 
       <ConfirmationModal
@@ -122,8 +132,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
         <GameOverModal
           won={gameState === 'win'}
           onNewGame={startNewGame}
+          pilesRemaining={piles.filter(p => !p.flipped).length}
         />
       )}
+
+      <StatsOverlay visible={showStatsOverlay} onDismiss={() => setShowStatsOverlay(false)} />
     </View>
   );
 };
@@ -192,11 +205,20 @@ const styles = StyleSheet.create({
     color: COLORS.text.primary,
     fontFamily: 'VT323',
   },
-  rulesButton: {
+  tertiaryButton: {
     marginTop: 12,
     padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  rulesText: {
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    gap: 16,
+  },
+  tertiaryButtonText: {
     fontSize: 16,
     color: COLORS.text.secondary,
     textDecorationLine: 'underline',
