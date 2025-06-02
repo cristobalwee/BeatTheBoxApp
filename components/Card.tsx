@@ -84,22 +84,26 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
     }
   }, [flipped]);
 
-  React.useEffect(() => {
-    // If the card identity changes, trigger deal animation
+  React.useLayoutEffect(() => {
     if (prevCardRef.current !== card) {
       dealTranslateY.value = -50;
       dealOpacity.value = 0;
       dealTranslateY.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.back(1.1)) });
       dealOpacity.value = withTiming(1, { duration: 400 });
-      prevCardRef.current = card;
+    }
+  }, [card, dealTranslateY, dealOpacity]);
 
+  React.useEffect(() => {
+    // If the card identity changes, trigger deal animation
+    if (prevCardRef.current !== card) {
+      prevCardRef.current = card;
       if (isDisabled) {
         spin.value = withDelay(
           1000,
           withSequence(
             withTiming(180, { duration: 500 }),
-            withTiming(170, { duration: 200 }),
-            withTiming(190, { duration: 200 }),
+            withTiming(175, { duration: 200 }),
+            withTiming(185, { duration: 200 }),
             withTiming(180, { duration: 200 }, (finished) => {
               if (finished && onFlipComplete) {
                 runOnJS(onFlipComplete)();
@@ -111,7 +115,7 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
         spin.value = 0;
       }
     }
-  }, [card, dealTranslateY, dealOpacity, isDisabled]);
+  }, [card, isDisabled]);
   
   const frontAnimatedStyle = useAnimatedStyle(() => {
     const interpolatedRotate = interpolate(
@@ -223,8 +227,8 @@ const styles = StyleSheet.create({
   },
   cardBack: {
     backgroundColor: COLORS.card.backside,
-    borderWidth: 1,
-    borderColor: '#000',
+    borderWidth: 2,
+    borderColor: '#bbb',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',

@@ -70,6 +70,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     startNewGame();
   };
 
+  const handleBackgroundPress = () => {
+    if (selectedPileIndex !== null) {
+      unselectPile();
+    }
+  };
+
   const renderPiles = () => {
     return (
       <View style={styles.grid}>
@@ -93,34 +99,36 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Beat the Box</Text>
-        <DeckCounter count={remainingCards} />
-      </View>
-      
-      <View style={styles.boardContainer}>
-        {renderPiles()}
-      </View>
-      
-      <View style={styles.actions}>
-        <Pressable
-          style={styles.newGameButton}
-          onPress={() => setShowNewGameConfirm(true)}
-        >
-          <Text style={styles.buttonText}>New Game</Text>
-        </Pressable>
-        
-        <View style={styles.buttonContainer}>
-          <Pressable onPress={onShowRules} style={styles.tertiaryButton}>
-            <CircleHelp size={20} color={COLORS.text.secondary} />
-            <Text style={styles.tertiaryButtonText}>How to play</Text>
-          </Pressable>
-          <Pressable onPress={() => setShowStatsOverlay(true)} style={styles.tertiaryButton}>
-            <ChartNoAxesColumn size={20} color={COLORS.text.secondary} />
-            <Text style={styles.tertiaryButtonText}>Your stats</Text>
-          </Pressable>
+      <Pressable style={styles.backgroundPressable} onPress={handleBackgroundPress}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Beat the Box</Text>
+          <DeckCounter count={remainingCards} />
         </View>
-      </View>
+        
+        <View style={styles.boardContainer}>
+          {renderPiles()}
+        </View>
+        
+        <View style={styles.actions}>
+          <Pressable
+            style={styles.newGameButton}
+            onPress={() => setShowNewGameConfirm(true)}
+          >
+            <Text style={styles.buttonText}>New Game</Text>
+          </Pressable>
+          
+          <View style={styles.buttonContainer}>
+            <Pressable onPress={onShowRules} style={styles.tertiaryButton}>
+              <CircleHelp size={20} color={COLORS.text.secondary} />
+              <Text style={styles.tertiaryButtonText}>How to play</Text>
+            </Pressable>
+            <Pressable onPress={() => setShowStatsOverlay(true)} style={styles.tertiaryButton}>
+              <ChartNoAxesColumn size={20} color={COLORS.text.secondary} />
+              <Text style={styles.tertiaryButtonText}>Your stats</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Pressable>
 
       <ConfirmationModal
         visible={showNewGameConfirm}
@@ -224,6 +232,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.text.secondary,
     textDecorationLine: 'underline',
+  },
+  backgroundPressable: {
+    flex: 1,
   },
 });
 

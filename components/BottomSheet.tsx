@@ -8,7 +8,10 @@ import Animated, {
   withTiming,
   interpolate,
   Extrapolate,
+  Easing,
   runOnJS,
+  FadeIn,
+  FadeOut,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { COLORS } from '../constants/colors';
@@ -18,6 +21,7 @@ import { X } from 'lucide-react-native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MAX_TRANSLATE_Y = -SCREEN_HEIGHT + 50;
+const PressAnimated = Animated.createAnimatedComponent(Pressable);
 
 interface BottomSheetProps {
   visible: boolean;
@@ -35,7 +39,6 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const active = useSharedValue(false);
   const context = useSharedValue({ y: 0 });
-  const opacity = useSharedValue(0);
   const [isRendered, setIsRendered] = useState(false);
   const [isAtTop, setIsAtTop] = useState(true);
   const insets = useSafeAreaInsets();
@@ -43,30 +46,19 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   const scrollTo = useCallback((destination: number, shouldAnimate = true) => {
     'worklet';
     active.value = destination !== SCREEN_HEIGHT;
-    
-    if (shouldAnimate) {
-      translateY.value = withSpring(destination, {
-        damping: 50,
-        stiffness: 400,
-        mass: 1,
-        restDisplacementThreshold: 0.2,
-        restSpeedThreshold: 0.2,
-      });
-      opacity.value = withTiming(destination === SCREEN_HEIGHT ? 0 : 0.7, {
-        duration: 400
-      });
-    } else {
-      translateY.value = destination;
-      opacity.value = destination === SCREEN_HEIGHT ? 0 : 0.7;
-    }
+    translateY.value = withSpring(destination, {
+      damping: 50,
+      stiffness: 400,
+      mass: 1,
+      restDisplacementThreshold: 0.2,
+      restSpeedThreshold: 0.2,
+    });
   }, []);
 
   const handleClose = useCallback(() => {
     scrollTo(SCREEN_HEIGHT);
-    setTimeout(() => {
-      setIsRendered(false);
-      onClose();
-    }, 400);
+    setIsRendered(false);
+    onClose();
   }, [onClose, scrollTo]);
 
   useEffect(() => {
@@ -102,12 +94,6 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
       const nextY = event.translationY + context.value.y;
       // Clamp so it can't go above snapPointValue (no upward drag)
       translateY.value = Math.max(snapPointValue, Math.min(nextY, SCREEN_HEIGHT));
-      opacity.value = interpolate(
-        translateY.value,
-        [SCREEN_HEIGHT, SCREEN_HEIGHT * 0.7],
-        [0, 0.7],
-        Extrapolate.CLAMP
-      );
     })
     .onEnd((event) => {
       if (event.velocityY > 500 || event.translationY > SCREEN_HEIGHT * 0.2) {
@@ -119,39 +105,28 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   const composedGesture = Gesture.Simultaneous(panGesture, nativeGesture);
 
   const rBottomSheetStyle = useAnimatedStyle(() => {
-    const borderRadius = interpolate(
-      translateY.value,
-      [MAX_TRANSLATE_Y + 50, MAX_TRANSLATE_Y],
-      [25, 5],
-      Extrapolate.CLAMP
-    );
-
     return {
-      borderRadius,
       transform: [{ translateY: translateY.value }],
-    };
-  });
-
-  const rBackdropStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
     };
   });
 
   const BlurComponent = Platform.OS === 'web' ? View : BlurView;
   const blurProps = Platform.OS === 'web'
-    ? { style: [styles.backdrop, rBackdropStyle, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }] }
-    : { style: [styles.backdrop, rBackdropStyle], intensity: 15, tint: "dark" as const };
+    ? { style: [styles.backdrop, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }] }
+    : { style: [styles.backdrop], intensity: 15, tint: "dark" as const };
 
   if (!isRendered) return null;
 
   return (
     <View style={styles.container} pointerEvents={visible ? 'auto' : 'none'}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}>
-        <Animated.View style={StyleSheet.absoluteFill}>
-          <BlurComponent {...blurProps} />
-        </Animated.View>
-      </Pressable>
+      <PressAnimated 
+        style={StyleSheet.absoluteFill}
+        entering={FadeIn.duration(200)}
+        exiting={FadeOut.duration(200)}
+        onPress={handleClose}
+      >
+        <BlurComponent {...blurProps} />
+      </PressAnimated>
       <GestureDetector gesture={composedGesture}>
         <Animated.View style={[styles.bottomSheetContainer, { maxHeight: SCREEN_HEIGHT * snapPoints[0] }, rBottomSheetStyle]}>
           {/* Close (X) button */}

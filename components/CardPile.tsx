@@ -45,7 +45,7 @@ const CardPile: React.FC<CardPileProps> = ({
   // Animation values
   const scale = useSharedValue(0.8);
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(-200);
+  const translateY = useSharedValue(-20);
   // Add scale for selection
   const selectedScale = useSharedValue(1);
 

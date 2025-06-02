@@ -22,7 +22,7 @@ const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onDismis
 
           <Text style={styles.sectionTitle}>Controls:</Text>
           <Text style={styles.paragraph}>
-            🔘 Tap a card to see options (Higher, Lower, Same)
+            👆 Tap a card to see options (Higher, Lower, Same)
           </Text>
           <Text style={styles.paragraph}>
             ⬆️ Swipe up on a card to guess higher
