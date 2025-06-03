@@ -21,6 +21,7 @@ import { X } from 'lucide-react-native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MAX_TRANSLATE_Y = -SCREEN_HEIGHT + 50;
+const MAX_SHEET_HEIGHT = SCREEN_HEIGHT * 0.8;
 const PressAnimated = Animated.createAnimatedComponent(Pressable);
 
 interface BottomSheetProps {
@@ -36,16 +37,17 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   children,
   snapPoints = [0.9],
 }) => {
-  const translateY = useSharedValue(SCREEN_HEIGHT);
+  const translateY = useSharedValue(10000);
   const active = useSharedValue(false);
   const context = useSharedValue({ y: 0 });
-  const [isRendered, setIsRendered] = useState(false);
   const [isAtTop, setIsAtTop] = useState(true);
+  const [sheetHeight, setSheetHeight] = useState(0);
   const insets = useSafeAreaInsets();
+  const HANDLE_HEIGHT = 40;
 
-  const scrollTo = useCallback((destination: number, shouldAnimate = true) => {
+  const scrollTo = useCallback((destination: number) => {
     'worklet';
-    active.value = destination !== SCREEN_HEIGHT;
+    active.value = destination !== insets.bottom;
     translateY.value = withSpring(destination, {
       damping: 50,
       stiffness: 400,
@@ -53,34 +55,30 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
       restDisplacementThreshold: 0.2,
       restSpeedThreshold: 0.2,
     });
-  }, []);
+  }, [insets.bottom]);
 
   const handleClose = useCallback(() => {
-    scrollTo(SCREEN_HEIGHT);
-    setIsRendered(false);
+    scrollTo(sheetHeight + insets.bottom);
     onClose();
-  }, [onClose, scrollTo]);
+  }, [onClose, scrollTo, sheetHeight, insets.bottom]);
 
   useEffect(() => {
-    if (visible && !isRendered) {
-      setIsRendered(true);
-      requestAnimationFrame(() => {
-        const snapPoint = snapPoints[0];
-        scrollTo(-(SCREEN_HEIGHT * snapPoint));
-      });
-    } else if (!visible && isRendered) {
-      handleClose();
+    if (sheetHeight > 0) {
+      if (visible) {
+        scrollTo(insets.bottom);
+      } else {
+        scrollTo(sheetHeight + insets.bottom);
+      }
+    } else {
+      translateY.value = 10000;
     }
-  }, [visible, isRendered]);
+  }, [visible, sheetHeight, insets.bottom]);
 
   // Track scroll position
   const handleScroll = (event: any) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     setIsAtTop(offsetY <= 0);
   };
-
-  // Calculate the snap point position
-  const snapPointValue = -(SCREEN_HEIGHT * snapPoints[0]);
 
   // Native gesture for scroll coordination
   const nativeGesture = Gesture.Native();
@@ -92,14 +90,14 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     .onUpdate((event) => {
       // Only allow downward movement (positive translationY)
       const nextY = event.translationY + context.value.y;
-      // Clamp so it can't go above snapPointValue (no upward drag)
-      translateY.value = Math.max(snapPointValue, Math.min(nextY, SCREEN_HEIGHT));
+      // Clamp so it can't go above insets.bottom (no upward drag)
+      translateY.value = Math.max(insets.bottom, Math.min(nextY, sheetHeight + insets.bottom));
     })
     .onEnd((event) => {
-      if (event.velocityY > 500 || event.translationY > SCREEN_HEIGHT * 0.2) {
+      if (event.velocityY > 500 || event.translationY > (sheetHeight + insets.bottom) * 0.2) {
         runOnJS(handleClose)();
       } else {
-        scrollTo(snapPointValue);
+        scrollTo(insets.bottom);
       }
     });
   const composedGesture = Gesture.Simultaneous(panGesture, nativeGesture);
@@ -115,20 +113,32 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     ? { style: [styles.backdrop, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }] }
     : { style: [styles.backdrop], intensity: 15, tint: "dark" as const };
 
-  if (!isRendered) return null;
-
   return (
     <View style={styles.container} pointerEvents={visible ? 'auto' : 'none'}>
-      <PressAnimated 
-        style={StyleSheet.absoluteFill}
-        entering={FadeIn.duration(200)}
-        exiting={FadeOut.duration(200)}
-        onPress={handleClose}
-      >
-        <BlurComponent {...blurProps} />
-      </PressAnimated>
+      {visible && (
+        <PressAnimated 
+          style={StyleSheet.absoluteFill}
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(300)}
+          onPress={handleClose}
+        >
+          <BlurComponent {...blurProps} />
+        </PressAnimated>
+      )}
       <GestureDetector gesture={composedGesture}>
-        <Animated.View style={[styles.bottomSheetContainer, { maxHeight: SCREEN_HEIGHT * snapPoints[0] }, rBottomSheetStyle]}>
+        <Animated.View
+          style={[
+            styles.bottomSheetContainer,
+            { bottom: 0, maxHeight: MAX_SHEET_HEIGHT },
+            rBottomSheetStyle,
+          ]}
+          onLayout={e => {
+            setSheetHeight(e.nativeEvent.layout.height);
+            if (!visible) {
+              translateY.value = e.nativeEvent.layout.height + insets.bottom;
+            }
+          }}
+        >
           {/* Close (X) button */}
           <Pressable
             onPress={handleClose}
@@ -177,8 +187,10 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#2E334F',
     position: 'absolute',
-    top: SCREEN_HEIGHT,
+    bottom: 0,
     borderRadius: 32,
+    borderBottomEndRadius: 0,
+    borderBottomStartRadius: 0,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },

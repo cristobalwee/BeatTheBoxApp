@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { COLORS } from '../constants/colors';
 import BottomSheet from './BottomSheet';
@@ -11,12 +11,13 @@ interface GameOverModalProps {
 }
 
 const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame, pilesRemaining }) => {
+  const [isVisible, setVisible] = useState(true);
   useEffect(() => {
     updateStatsOnGameEnd(won, pilesRemaining);
   }, [won, pilesRemaining]);
 
   return (
-    <BottomSheet visible={true} onClose={onNewGame} snapPoints={[0.35]}>
+    <BottomSheet visible={isVisible} onClose={ () => setVisible(false) } snapPoints={[0.35]}>
       <View style={styles.content}>
         <Text style={styles.title}>
           {won ? '🎉 You Win! 🎉' : 'Game Over'}

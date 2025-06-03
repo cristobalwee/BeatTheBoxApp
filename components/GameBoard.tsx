@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingTop: 0,
     height: '100%',
   },
   grid: {
