@@ -186,8 +186,8 @@ const styles = StyleSheet.create({
   },
   pileWrapper: {
     width: '30%',
-    maxHeight: '40%',
-    // aspectRatio: 2/3,
+    height: '40%',
+    maxHeight: 280,
   },
   actions: {
     paddingHorizontal: 24,
