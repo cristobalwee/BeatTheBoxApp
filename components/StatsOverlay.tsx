@@ -38,8 +38,15 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({ visible, onDismiss }) => {
     ? ((stats.gamesWon / stats.gamesPlayed) * 100).toFixed(1)
     : '0';
 
+  const modeWinPercentage = (mode: string) => {
+    if (!stats) return '0';
+    const modeStats = stats.modeStats[mode];
+    if (!modeStats || modeStats.gamesPlayed === 0) return '0';
+    return ((modeStats.gamesWon / modeStats.gamesPlayed) * 100).toFixed(1);
+  };
+
   return (
-    <BottomSheet visible={visible} onClose={onDismiss} snapPoints={[0.45]}>
+    <BottomSheet visible={visible} onClose={onDismiss} snapPoints={[0.65]}>
       <View style={styles.container}>
         <Text style={styles.title}>Your Stats</Text>
         {loading || !stats ? (
@@ -50,6 +57,12 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({ visible, onDismiss }) => {
             <Text style={styles.stat}>Games Won: <Text style={styles.value}>{stats.gamesWon}</Text></Text>
             <Text style={styles.stat}>Win %: <Text style={styles.value}>{winPercentage}</Text></Text>
             <Text style={styles.stat}>Best Piles Remaining: <Text style={styles.value}>{stats.bestPilesRemaining}</Text></Text>
+            <Text style={styles.stat}>Longest Win Streak: <Text style={styles.value}>{stats.longestWinStreak}</Text></Text>
+            <Text style={styles.stat}>Longest Guess Streak: <Text style={styles.value}>{stats.longestGuessStreak}</Text></Text>
+            <Text style={[styles.stat, { marginTop: 16 }]}>Wins by Mode:</Text>
+            <Text style={styles.stat}>Casual: <Text style={styles.value}>{stats.modeStats.casual.gamesWon} / {stats.modeStats.casual.gamesPlayed}</Text> (<Text style={styles.value}>{modeWinPercentage('casual')}</Text>%)</Text>
+            <Text style={styles.stat}>Risky: <Text style={styles.value}>{stats.modeStats.risky.gamesWon} / {stats.modeStats.risky.gamesPlayed}</Text> (<Text style={styles.value}>{modeWinPercentage('risky')}</Text>%)</Text>
+            <Text style={styles.stat}>No Mercy: <Text style={styles.value}>{stats.modeStats.no_mercy.gamesWon} / {stats.modeStats.no_mercy.gamesPlayed}</Text> (<Text style={styles.value}>{modeWinPercentage('no_mercy')}</Text>%)</Text>
             <Pressable style={styles.resetButton} onPress={handleReset} disabled={resetting}>
               <Text style={styles.resetButtonText}>{resetting ? 'Resetting...' : 'Reset Stats'}</Text>
             </Pressable>

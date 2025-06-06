@@ -20,15 +20,19 @@ export type Pile = {
 
 export type GameState = 'idle' | 'playing' | 'win' | 'lose' | 'guessing';
 
+export type GameMode = 'casual' | 'risky' | 'no_mercy';
+
 export interface GameContextType {
   piles: Pile[];
   gameState: GameState;
   remainingCards: number;
   currentGuess: { pileIndex: number | null; guessType: GuessType | null };
   selectedPileIndex: number | null;
-  startNewGame: () => void;
+  startNewGame: (mode?: GameMode) => void;
   makeGuess: (pileIndex: number, guessType: GuessType) => void;
   selectPile: (pileIndex: number) => void;
   unselectPile: () => void;
   deck: Card[];
+  mode: GameMode;
+  lives: number;
 }

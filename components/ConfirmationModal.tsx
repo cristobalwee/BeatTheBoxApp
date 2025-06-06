@@ -2,13 +2,15 @@ import React from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { COLORS } from '../constants/colors';
 import BottomSheet from './BottomSheet';
+import { GameMode } from '../types/game';
 
 interface ConfirmationModalProps {
   visible: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
+  onConfirm?: () => void;
+  onCancel?: () => void;
   title: string;
-  message: string;
+  message?: string;
+  onSelectMode?: (mode: GameMode) => void;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -17,27 +19,43 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onCancel,
   title,
   message,
+  onSelectMode,
 }) => {
   return (
-    <BottomSheet visible={visible} onClose={onCancel} snapPoints={[0.4]}>
+    <BottomSheet visible={visible} onClose={onCancel || (() => {})} snapPoints={[0.4]}>
       <View style={styles.content}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.message}>{message}</Text>
-        
-        <View style={styles.buttonContainer}>
-          <Pressable 
-            style={[styles.button, styles.confirmButton]} 
-            onPress={onConfirm}
-          >
-            <Text style={styles.buttonText}>Confirm</Text>
-          </Pressable>
-          <Pressable 
-            style={[styles.button, styles.cancelButton]} 
-            onPress={onCancel}
-          >
-            <Text style={[styles.buttonText, styles.cancelText]}>Cancel</Text>
-          </Pressable>
-        </View>
+        {onSelectMode ? (
+          <View style={styles.buttonContainer}>
+            <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('casual')}>
+              <Text style={styles.buttonText}>Casual (2 lives)</Text>
+            </Pressable>
+            <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('risky')}>
+              <Text style={styles.buttonText}>Risky (1 life)</Text>
+            </Pressable>
+            <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('no_mercy')}>
+              <Text style={styles.buttonText}>No Mercy (0 lives)</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <>
+            {message && <Text style={styles.message}>{message}</Text>}
+            <View style={styles.buttonContainer}>
+              <Pressable 
+                style={[styles.button, styles.confirmButton]} 
+                onPress={onConfirm}
+              >
+                <Text style={styles.buttonText}>Confirm</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.button, styles.cancelButton]} 
+                onPress={onCancel}
+              >
+                <Text style={[styles.buttonText, styles.cancelText]}>Cancel</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
       </View>
     </BottomSheet>
   );

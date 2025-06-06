@@ -2,7 +2,7 @@
   "expo": {
     "name": "Beat the Box – card game",
     "slug": "beat-the-box",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "beatthebox",
@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.grana.beatthebox",
       "infoPlist": {
-        "NSCameraUsageDescription": "This app does not use the camera."
+        "NSCameraUsageDescription": "This app does not use the camera.",
+        "CFBundleDisplayName": "Beat the Box"
       }
     },
     "web": {

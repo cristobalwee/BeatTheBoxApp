@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, Platform } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Platform, Image } from 'react-native';
 import { CircleHelp, ChartNoAxesColumn } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 
 import { useGameContext } from '../context/GameContext';
 import CardPile from './CardPile';
@@ -29,12 +30,30 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     selectedPileIndex,
     unselectPile,
     deck,
+    mode,
+    lives,
   } = useGameContext();
 
   const [feedbackPileIndex, setFeedbackPileIndex] = useState<number | null>(null);
   const [feedbackSuccess, setFeedbackSuccess] = useState<boolean | null>(null);
   const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
   const [showStatsOverlay, setShowStatsOverlay] = useState(false);
+
+  // Animated life counter
+  const lifeScale = useSharedValue(1);
+  const previousLives = React.useRef(lives);
+  React.useEffect(() => {
+    if (previousLives.current !== lives) {
+      lifeScale.value = withTiming(1.2, { duration: 150 });
+      setTimeout(() => {
+        lifeScale.value = withTiming(1, { duration: 150, easing: Easing.elastic(1.2) });
+      }, 150);
+      previousLives.current = lives;
+    }
+  }, [lives]);
+  const lifeCounterStyle = useAnimatedStyle(() => {
+    return { transform: [{ scale: lifeScale.value }] };
+  });
 
   const handleGuess = (pileIndex: number, guessType: GuessType) => {
     if (Platform.OS !== 'web') {
@@ -101,7 +120,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     <View style={styles.container}>
       <Pressable style={styles.backgroundPressable} onPress={handleBackgroundPress}>
         <View style={styles.header}>
-          <Text style={styles.title}>Beat the Box</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.title}>Beat the Box</Text>
+            {(mode === 'casual' || mode === 'risky') && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
+                <Image source={require('../assets/images/heart.png')} style={{ width: 24, height: 24, marginRight: 4 }} />
+                <Animated.Text style={[{ fontSize: 18, fontWeight: 'bold', color: COLORS.text.primary }, lifeCounterStyle]}>
+                  {lives}
+                </Animated.Text>
+              </View>
+            )}
+          </View>
           <DeckCounter count={remainingCards} />
         </View>
         
@@ -132,10 +161,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
 
       <ConfirmationModal
         visible={showNewGameConfirm}
-        title="Start New Game?"
-        message="Are you sure you want to start a new game? Your current progress will be lost."
-        onConfirm={() => handleNewGameConfirm(gameState === 'win', piles.filter(p => !p.flipped).length)}
-        onCancel={() => setShowNewGameConfirm(false)}
+        title="Choose Game Mode"
+        onSelectMode={(mode) => {
+          setShowNewGameConfirm(false);
+          startNewGame(mode);
+        }}
       />
 
       {(gameState === 'win' || gameState === 'lose') && (

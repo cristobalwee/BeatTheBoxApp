@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { GameContextType, GameState, GuessType, Pile, Card } from '../types/game';
 import { createDeck, shuffleDeck, isGuessCorrect } from '../utils/card';
+import { updateStatsOnGameEnd, updateGuessStreak } from '../utils/stats';
 
 const defaultGameContext: GameContextType = {
   piles: Array(9).fill({ cards: [], flipped: false, disabled: false }),
@@ -15,6 +16,8 @@ const defaultGameContext: GameContextType = {
   selectPile: () => {},
   unselectPile: () => {},
   deck: [],
+  mode: 'casual',
+  lives: 2,
 };
 
 const GameContext = createContext<GameContextType>(defaultGameContext);
@@ -31,16 +34,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     pileIndex: null,
     guessType: null,
   });
+  const [mode, setMode] = useState<'casual' | 'risky' | 'no_mercy'>('casual');
+  const [lives, setLives] = useState<number>(2);
+  const [guessStreak, setGuessStreak] = useState(0);
 
   // Initialize a new game
-  const startNewGame = () => {
+  const startNewGame = (newMode?: 'casual' | 'risky' | 'no_mercy') => {
+    const selectedMode = newMode || mode;
+    setMode(selectedMode);
+    let initialLives = 0;
+    if (selectedMode === 'casual') initialLives = 2;
+    else if (selectedMode === 'risky') initialLives = 1;
+    else initialLives = 0;
+    setLives(initialLives);
     // Create and shuffle a new deck
     const newDeck = shuffleDeck(createDeck());
-    
     // Deal 9 cards to start
     const initialPiles: Pile[] = [];
     const remainingDeck: Card[] = [...newDeck];
-    
     for (let i = 0; i < 9; i++) {
       const card = remainingDeck.shift();
       initialPiles.push({
@@ -49,13 +60,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         disabled: false,
       });
     }
-    
     setDeck(remainingDeck);
     setPiles(initialPiles);
     setGameState('playing');
     setSelectedPileIndex(null);
     setCurrentGuess({ pileIndex: null, guessType: null });
-    
+    setGuessStreak(0);
     // Optional haptic feedback
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -85,47 +95,43 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (gameState !== 'playing' || piles[pileIndex].disabled || piles[pileIndex].flipped) {
       return;
     }
-    
-    // Set game state to guessing during the guess process
     setGameState('guessing');
     setCurrentGuess({ pileIndex, guessType });
     setSelectedPileIndex(null); // Deselect pile
-    
-    // Need to draw a card from deck
     if (deck.length > 0) {
       const newDeck = [...deck];
       const drawnCard = newDeck.shift()!;
-      
-      // Get the top card of the selected pile
       const currentPile = piles[pileIndex];
       const topCard = currentPile.cards[currentPile.cards.length - 1];
-      
-      // Check if guess is correct
       const correct = isGuessCorrect(topCard, drawnCard, guessType);
-      
       setTimeout(() => {
-        // Update piles based on the guess result
         const newPiles = [...piles];
         if (correct) {
-          // Add card to pile if correct
           newPiles[pileIndex] = {
             ...currentPile,
             cards: [...currentPile.cards, drawnCard],
           };
+          setGuessStreak(guessStreak + 1);
         } else {
-          // Flip pile if incorrect
-          newPiles[pileIndex] = {
-            ...currentPile,
-            cards: [...currentPile.cards, drawnCard],
-            flipped: true,
-            disabled: true,
-          };
+          if (lives > 0) {
+            setLives(lives - 1);
+            newPiles[pileIndex] = {
+              ...currentPile,
+              cards: [...currentPile.cards, drawnCard],
+            };
+          } else {
+            newPiles[pileIndex] = {
+              ...currentPile,
+              cards: [...currentPile.cards, drawnCard],
+              flipped: true,
+              disabled: true,
+            };
+          }
+          setGuessStreak(0);
         }
-        
         setPiles(newPiles);
         setDeck(newDeck);
-        
-        // Optional haptic feedback based on result
+        updateGuessStreak(correct);
         if (Platform.OS !== 'web') {
           if (correct) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -133,25 +139,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           }
         }
-        
-        // Check win/lose conditions after a short delay
         setTimeout(() => {
-          // Check if all piles are flipped (lose condition)
           const allPilesFlipped = newPiles.every(pile => pile.flipped);
-          
-          // Check if deck is empty (potential win condition)
           const deckEmpty = newDeck.length === 0;
-          
           if (allPilesFlipped) {
+            updateStatsOnGameEnd(false, 0, mode, guessStreak);
             setGameState('lose');
           } else if (deckEmpty) {
+            updateStatsOnGameEnd(true, newPiles.filter(p => !p.flipped).length, mode, guessStreak);
             setGameState('win');
           } else {
             setGameState('playing');
             setCurrentGuess({ pileIndex: null, guessType: null });
           }
         }, 800);
-      }, 300); // Delay to show the card before determining outcome
+      }, 300);
     }
   };
   
@@ -172,6 +174,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     selectPile,
     unselectPile,
     deck,
+    mode,
+    lives,
   };
   
   return (
