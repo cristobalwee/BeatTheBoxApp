@@ -18,6 +18,7 @@ const defaultGameContext: GameContextType = {
   deck: [],
   mode: 'casual',
   lives: 2,
+  guessStreak: 0,
 };
 
 const GameContext = createContext<GameContextType>(defaultGameContext);
@@ -176,6 +177,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deck,
     mode,
     lives,
+    guessStreak,
   };
   
   return (

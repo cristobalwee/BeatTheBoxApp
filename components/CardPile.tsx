@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import {
   GestureDetector,
   Gesture,
@@ -12,11 +12,14 @@ import Animated, {
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
+import { Flame } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 
 import Card from './Card';
 import GuessOptions from './GuessOptions';
 import FeedbackIndicator from './FeedbackIndicator';
 import { Pile, GuessType } from '../types/game';
+import { COLORS } from '../constants/colors';
 
 interface CardPileProps {
   pile: Pile;
@@ -27,6 +30,7 @@ interface CardPileProps {
   dealDelay: number;
   showFeedback: boolean;
   feedbackSuccess?: boolean;
+  guessStreak?: number;
 }
 
 const CardPile: React.FC<CardPileProps> = ({
@@ -38,6 +42,7 @@ const CardPile: React.FC<CardPileProps> = ({
   dealDelay,
   showFeedback,
   feedbackSuccess = false,
+  guessStreak = 0,
 }) => {
   const { cards, flipped, disabled } = pile;
   const isEmptyPile = cards.length === 0;
@@ -48,6 +53,29 @@ const CardPile: React.FC<CardPileProps> = ({
   const translateY = useSharedValue(-20);
   // Add scale for selection
   const selectedScale = useSharedValue(1);
+
+  // Streak counter animation
+  const streakScale = useSharedValue(0.8);
+  const streakOpacity = useSharedValue(0);
+  useEffect(() => {
+    if (showFeedback && guessStreak > 2) {
+      streakScale.value = withTiming(1.1, { duration: 180 });
+      streakOpacity.value = withTiming(1, { duration: 180 });
+      setTimeout(() => {
+        streakScale.value = withTiming(1, { duration: 120 });
+      }, 180);
+      if (Haptics && Haptics.impactAsync) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+    } else {
+      streakOpacity.value = withTiming(0, { duration: 120 });
+      streakScale.value = withTiming(0.8, { duration: 120 });
+    }
+  }, [showFeedback, guessStreak]);
+  const streakStyle = useAnimatedStyle(() => ({
+    opacity: streakOpacity.value,
+    transform: [{ scale: streakScale.value }],
+  }));
 
   useEffect(() => {
     const delay = dealDelay * 100;
@@ -121,11 +149,11 @@ const CardPile: React.FC<CardPileProps> = ({
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.container, animatedStyle]}>
         <View style={styles.feedbackIndicatorContainer}>
-        {showFeedback && (
-          <FeedbackIndicator
-            success={!!feedbackSuccess}
-          />
-        )}
+          {showFeedback && (
+            <FeedbackIndicator
+              success={!!feedbackSuccess}
+            />
+          )}
         </View>
         <Card
           card={topCard}
@@ -162,9 +190,28 @@ const styles = StyleSheet.create({
     width: '100%',
     top: -20,
     zIndex: 10,
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center'
+  },
+  streakPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(200,200,200,0.85)',
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginBottom: 2,
+    marginTop: 2,
+    minHeight: 24,
+    minWidth: 60,
+    alignSelf: 'center',
+  },
+  streakText: {
+    color: COLORS.text.secondary,
+    fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: 'VT323',
   },
 });
 

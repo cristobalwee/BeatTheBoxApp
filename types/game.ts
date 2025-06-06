@@ -35,4 +35,5 @@ export interface GameContextType {
   deck: Card[];
   mode: GameMode;
   lives: number;
+  guessStreak: number;
 }

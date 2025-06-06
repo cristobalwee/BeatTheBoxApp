@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, Platform, Image } from 'react-native';
-import { CircleHelp, ChartNoAxesColumn } from 'lucide-react-native';
+import { CircleHelp, ChartNoAxesColumn, Flame } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, FadeInDown, FadeOutUp } from 'react-native-reanimated';
 
 import { useGameContext } from '../context/GameContext';
 import CardPile from './CardPile';
@@ -32,12 +32,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     deck,
     mode,
     lives,
+    guessStreak,
   } = useGameContext();
 
   const [feedbackPileIndex, setFeedbackPileIndex] = useState<number | null>(null);
   const [feedbackSuccess, setFeedbackSuccess] = useState<boolean | null>(null);
   const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
   const [showStatsOverlay, setShowStatsOverlay] = useState(false);
+  const [showStreakToast, setShowStreakToast] = useState(false);
+  const [streakToastValue, setStreakToastValue] = useState(0);
 
   // Animated life counter
   const lifeScale = useSharedValue(1);
@@ -54,6 +57,29 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
   const lifeCounterStyle = useAnimatedStyle(() => {
     return { transform: [{ scale: lifeScale.value }] };
   });
+
+  React.useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    let hapticTimeout: ReturnType<typeof setTimeout> | null = null;
+    if (feedbackPileIndex !== null && guessStreak > 4) {
+      setStreakToastValue(guessStreak);
+      setShowStreakToast(true);
+      hapticTimeout = setTimeout(() => {
+        if (Platform.OS !== 'web') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
+        }
+      }, 200);
+      timeout = setTimeout(() => {
+        setShowStreakToast(false);
+      }, 2400);
+    } else {
+      setShowStreakToast(false);
+    }
+    return () => { 
+      if (timeout) clearTimeout(timeout); 
+      if (hapticTimeout) clearTimeout(hapticTimeout);
+    };
+  }, [feedbackPileIndex, guessStreak]);
 
   const handleGuess = (pileIndex: number, guessType: GuessType) => {
     if (Platform.OS !== 'web') {
@@ -81,7 +107,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
   };
 
   const handleNewGameConfirm = (won: boolean, pilesRemaining: number) => {
-    updateStatsOnGameEnd(won, pilesRemaining);
+    updateStatsOnGameEnd(won, pilesRemaining, mode, guessStreak);
     setShowNewGameConfirm(false);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -109,6 +135,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
               dealDelay={index}
               showFeedback={feedbackPileIndex === index}
               feedbackSuccess={feedbackSuccess ?? false}
+              guessStreak={feedbackPileIndex === index ? guessStreak : 0}
             />
           </View>
         ))}
@@ -118,20 +145,36 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
 
   return (
     <View style={styles.container}>
+      {showStreakToast && (
+        <Animated.View
+          style={styles.streakToast}
+          pointerEvents="none"
+          entering={FadeInDown.duration(200).withInitialValues({ transform: [{ translateY: -8 }] })}
+          exiting={FadeOutUp.duration(50).springify()
+            .damping(120)
+            .mass(0.5)
+            .stiffness(80)}
+        >
+          <Flame size={16} color={COLORS.feedback.error} style={{ marginRight: 4 }} />
+          <Text style={styles.streakToastText}>{streakToastValue} Streak!</Text>
+        </Animated.View>
+      )}
       <Pressable style={styles.backgroundPressable} onPress={handleBackgroundPress}>
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={styles.title}>Beat the Box</Text>
-            {(mode === 'casual' || mode === 'risky') && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
-                <Image source={require('../assets/images/heart.png')} style={{ width: 24, height: 24, marginRight: 4 }} />
-                <Animated.Text style={[{ fontSize: 18, fontWeight: 'bold', color: COLORS.text.primary }, lifeCounterStyle]}>
-                  {lives}
-                </Animated.Text>
-              </View>
-            )}
           </View>
-          <DeckCounter count={remainingCards} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {(mode === 'casual' || mode === 'risky') && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16, gap: 4}}>
+                  <Animated.Text style={[{ fontSize: 18, fontWeight: 'bold', color: COLORS.text.primary }, lifeCounterStyle]}>
+                    {lives}
+                  </Animated.Text>
+                  <Image source={require('../assets/images/heart.png')} style={{ width: 24, height: 24, marginRight: 4 }} />
+                </View>
+              )}
+            <DeckCounter count={remainingCards} />
+          </View>
         </View>
         
         <View style={styles.boardContainer}>
@@ -161,7 +204,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
 
       <ConfirmationModal
         visible={showNewGameConfirm}
-        title="Choose Game Mode"
+        title="Choose Difficulty"
+        onCancel={() => setShowNewGameConfirm(false)}
         onSelectMode={(mode) => {
           setShowNewGameConfirm(false);
           startNewGame(mode);
@@ -265,6 +309,31 @@ const styles = StyleSheet.create({
   },
   backgroundPressable: {
     flex: 1,
+  },
+  streakToast: {
+    position: 'absolute',
+    top: 20,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    minHeight: 28,
+    minWidth: 80,
+    zIndex: 100,
+    shadowColor: '#111',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  streakToastText: {
+    color: '#111', // white text for contrast
+    fontWeight: 'bold',
+    fontSize: 22,
+    fontFamily: 'VT323',
   },
 });
 

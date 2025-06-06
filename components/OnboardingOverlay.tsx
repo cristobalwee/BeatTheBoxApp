@@ -30,6 +30,17 @@ const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onDismis
           <Text style={styles.paragraph}>
             ⬇️ Swipe down on a card to guess lower
           </Text>
+
+          <Text style={styles.sectionTitle}>Difficulty modes:</Text>
+          <Text style={styles.paragraph}>
+            <Text style={{ fontWeight: 'bold'}}>Casual</Text> – 2 lives. Plenty of breathing room to learn the ropes.
+          </Text>
+          <Text style={styles.paragraph}>
+            <Text style={{ fontWeight: 'bold'}}>Risky</Text> – 1 life. One mistake, and you’re on thin ice.
+          </Text>
+          <Text style={styles.paragraph}>
+            <Text style={{ fontWeight: 'bold'}}>No mercy</Text> – 0 lives. Every wrong guess flips the pile. Brutal and unforgiving.
+          </Text>
           
           <Text style={styles.sectionTitle}>Rules:</Text>
           <Text style={styles.paragraph}>
