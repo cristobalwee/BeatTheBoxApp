@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Image } from 'react-native';
 import { COLORS } from '../constants/colors';
 import BottomSheet from './BottomSheet';
 import { GameMode } from '../types/game';
@@ -28,13 +28,22 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         {onSelectMode ? (
           <View style={styles.buttonContainer}>
             <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('casual')}>
-              <Text style={styles.buttonText}>Casual (2 lives)</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <Image source={require('../assets/images/heart-outline.png')} style={{ width: 36, height: 36, marginRight: -10 }} />
+                <Image source={require('../assets/images/heart-outline.png')} style={{ width: 36, height: 36, marginLeft: -10 }} />
+              </View>
+              <Text style={styles.buttonText}>Casual</Text>
+              <Text style={styles.buttonSubText}>2 lives</Text>
             </Pressable>
             <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('risky')}>
-              <Text style={styles.buttonText}>Risky (1 life)</Text>
+              <Image source={require('../assets/images/heart-outline.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
+              <Text style={styles.buttonText}>Risky</Text>
+              <Text style={styles.buttonSubText}>1 life</Text>
             </Pressable>
             <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('no_mercy')}>
-              <Text style={styles.buttonText}>No Mercy (0 lives)</Text>
+              <Image source={require('../assets/images/heart-outline-empty.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
+              <Text style={styles.buttonText}>No Mercy</Text>
+              <Text style={styles.buttonSubText}>0 lives</Text>
             </Pressable>
           </View>
         ) : (
@@ -81,19 +90,20 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   buttonContainer: {
-    flexDirection: 'column',
-    gap: 12,
+    flexDirection: 'row',
+    gap: 8,
     width: '100%',
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: 'center',
+    gap: 4
   },
   confirmButton: {
-    backgroundColor: COLORS.button.primary,
+    backgroundColor: COLORS.card.backside,
   },
   cancelButton: {
     backgroundColor: 'transparent',
@@ -104,6 +114,10 @@ const styles = StyleSheet.create({
     color: COLORS.text.primary,
     fontSize: 24,
     fontFamily: 'VT323',
+  },
+  buttonSubText: {
+    color: COLORS.text.secondary,
+    fontSize: 16,
   },
   cancelText: {
     color: COLORS.text.secondary,

@@ -33,6 +33,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     mode,
     lives,
     guessStreak,
+    longestGuessStreak,
   } = useGameContext();
 
   const [feedbackPileIndex, setFeedbackPileIndex] = useState<number | null>(null);
@@ -61,7 +62,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
   React.useEffect(() => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
     let hapticTimeout: ReturnType<typeof setTimeout> | null = null;
-    if (feedbackPileIndex !== null && guessStreak > 4) {
+    if (feedbackPileIndex !== null && guessStreak > 3) {
       setStreakToastValue(guessStreak);
       setShowStreakToast(true);
       hapticTimeout = setTimeout(() => {
@@ -162,17 +163,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
       <Pressable style={styles.backgroundPressable} onPress={handleBackgroundPress}>
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.title}>Beat the Box</Text>
+            <Image source={require('../assets/images/glove.png')} style={{ width: 28, height: 28, marginRight: 8 }} />
+            <Text style={styles.title}>Score: 0</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            {(mode === 'casual' || mode === 'risky') && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16, gap: 4}}>
-                  <Animated.Text style={[{ fontSize: 18, fontWeight: 'bold', color: COLORS.text.primary }, lifeCounterStyle]}>
-                    {lives}
-                  </Animated.Text>
-                  <Image source={require('../assets/images/heart.png')} style={{ width: 24, height: 24, marginRight: 4 }} />
-                </View>
-              )}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16, gap: 4}}>
+              <Animated.Text style={[{ fontFamily: 'VT323', fontSize: 28, fontWeight: 'bold', color: COLORS.text.primary }, lifeCounterStyle]}>
+                {lives}
+              </Animated.Text>
+              <Image source={require('../assets/images/heart.png')} style={{ width: 24, height: 24, marginRight: 4 }} />
+            </View>
             <DeckCounter count={remainingCards} />
           </View>
         </View>
@@ -217,6 +217,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
           won={gameState === 'win'}
           onNewGame={startNewGame}
           pilesRemaining={piles.filter(p => !p.flipped).length}
+          longestGuessStreak={longestGuessStreak}
+          cardsRemaining={remainingCards}
         />
       )}
 

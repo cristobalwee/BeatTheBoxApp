@@ -2,25 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { COLORS } from '../constants/colors';
 import BottomSheet from './BottomSheet';
-import { updateStatsOnGameEnd } from '../utils/stats';
 
 interface GameOverModalProps {
   won: boolean;
   onNewGame: () => void;
   pilesRemaining: number;
+  longestGuessStreak: number;
+  cardsRemaining: number;
 }
 
-const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame, pilesRemaining }) => {
+const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame, pilesRemaining, longestGuessStreak, cardsRemaining }) => {
   const [isVisible, setVisible] = useState(true);
-  useEffect(() => {
-    updateStatsOnGameEnd(won, pilesRemaining);
-  }, [won, pilesRemaining]);
 
   return (
     <BottomSheet visible={isVisible} onClose={ () => setVisible(false) } snapPoints={[0.35]}>
       <View style={styles.content}>
         <Text style={styles.title}>
-          {won ? '🎉 You Win! 🎉' : 'Game Over'}
+          {won ? 'You Win! 🎉' : 'Game Over'}
         </Text>
         
         <Text style={styles.message}>
@@ -28,6 +26,22 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame, pilesRema
             ? "Congratulations! You've successfully beat the box!"
             : "All piles have been flipped. Better luck next time!"}
         </Text>
+        
+        {/* Stats Section */}
+        <View style={{ marginBottom: 24 }}>
+          <Text style={{ color: COLORS.text.secondary, fontSize: 24, fontFamily: 'VT323', marginBottom: 2 }}>
+            Longest guess streak: <Text style={{ color: COLORS.text.primary }}>{longestGuessStreak}</Text>
+          </Text>
+          {won ? (
+            <Text style={{ color: COLORS.text.secondary, fontSize: 24, fontFamily: 'VT323' }}>
+              Piles remaining: <Text style={{ color: COLORS.text.primary }}>{pilesRemaining}</Text>
+            </Text>
+          ) : (
+            <Text style={{ color: COLORS.text.secondary, fontSize: 24, fontFamily: 'VT323' }}>
+              Cards remaining: <Text style={{ color: COLORS.text.primary }}>{cardsRemaining}</Text>
+            </Text>
+          )}
+        </View>
         
         <Pressable style={styles.button} onPress={onNewGame}>
           <Text style={styles.buttonText}>New Game</Text>
@@ -52,7 +66,7 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 16,
     color: COLORS.text.secondary,
-    marginBottom: 24,
+    marginBottom: 16,
     textAlign: 'left',
     lineHeight: 22,
   },

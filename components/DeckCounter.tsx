@@ -99,8 +99,9 @@ const styles = StyleSheet.create({
     left: 4,
   },
   counter: {
-    fontSize: 18,
+    fontSize: 28,
     fontWeight: 'bold',
+    fontFamily: 'VT323',
     color: COLORS.text.primary,
   },
 });

@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     fontFamily: 'VT323',
   },
   stat: {
-    fontSize: 20,
+    fontSize: 22,
     color: COLORS.text.secondary,
     marginBottom: 10,
     fontFamily: 'VT323',

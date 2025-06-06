@@ -19,6 +19,7 @@ const defaultGameContext: GameContextType = {
   mode: 'casual',
   lives: 2,
   guessStreak: 0,
+  longestGuessStreak: 0,
 };
 
 const GameContext = createContext<GameContextType>(defaultGameContext);
@@ -38,6 +39,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [mode, setMode] = useState<'casual' | 'risky' | 'no_mercy'>('casual');
   const [lives, setLives] = useState<number>(2);
   const [guessStreak, setGuessStreak] = useState(0);
+  const [longestGuessStreak, setLongestGuessStreak] = useState(0);
 
   // Initialize a new game
   const startNewGame = (newMode?: 'casual' | 'risky' | 'no_mercy') => {
@@ -67,6 +69,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSelectedPileIndex(null);
     setCurrentGuess({ pileIndex: null, guessType: null });
     setGuessStreak(0);
+    setLongestGuessStreak(0);
     // Optional haptic feedback
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -112,7 +115,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...currentPile,
             cards: [...currentPile.cards, drawnCard],
           };
-          setGuessStreak(guessStreak + 1);
+          const newStreak = guessStreak + 1;
+          setGuessStreak(newStreak);
+          setLongestGuessStreak(prev => (newStreak > prev ? newStreak : prev));
         } else {
           if (lives > 0) {
             setLives(lives - 1);
@@ -178,6 +183,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     mode,
     lives,
     guessStreak,
+    longestGuessStreak,
   };
   
   return (

@@ -183,9 +183,7 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
           backAnimatedStyle
         ]}
       >
-        <Text style={styles.backText}> 
-          B
-        </Text>
+        <Image source={require('../assets/images/glove-purple.png')} style={{ width: 32, height: 32, opacity: 0.8 }} />
       </Animated.View>
       {/* Card Front */}
       <Animated.View
