@@ -146,20 +146,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
 
   return (
     <View style={styles.container}>
-      {showStreakToast && (
-        <Animated.View
-          style={styles.streakToast}
-          pointerEvents="none"
-          entering={FadeInDown.duration(200).withInitialValues({ transform: [{ translateY: -8 }] })}
-          exiting={FadeOutUp.duration(50).springify()
-            .damping(120)
-            .mass(0.5)
-            .stiffness(80)}
-        >
-          <Flame size={16} color={COLORS.feedback.error} style={{ marginRight: 4 }} />
-          <Text style={styles.streakToastText}>{streakToastValue} Streak!</Text>
-        </Animated.View>
-      )}
       <Pressable style={styles.backgroundPressable} onPress={handleBackgroundPress}>
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -311,31 +297,6 @@ const styles = StyleSheet.create({
   },
   backgroundPressable: {
     flex: 1,
-  },
-  streakToast: {
-    position: 'absolute',
-    top: 20,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    minHeight: 28,
-    minWidth: 80,
-    zIndex: 100,
-    shadowColor: '#111',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  streakToastText: {
-    color: '#111', // white text for contrast
-    fontWeight: 'bold',
-    fontSize: 22,
-    fontFamily: 'VT323',
   },
 });
 

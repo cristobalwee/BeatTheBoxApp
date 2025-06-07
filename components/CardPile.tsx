@@ -11,6 +11,8 @@ import Animated, {
   withDelay,
   Easing,
   runOnJS,
+  FadeInUp,
+  FadeOutUp,
 } from 'react-native-reanimated';
 import { Flame } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -54,26 +56,20 @@ const CardPile: React.FC<CardPileProps> = ({
   // Add scale for selection
   const selectedScale = useSharedValue(1);
 
-  // Streak counter animation
+  // --- New Streak Toast Animation ---
+  const streakToastVisible = showFeedback && guessStreak > 2;
   const streakScale = useSharedValue(0.8);
-  const streakOpacity = useSharedValue(0);
   useEffect(() => {
-    if (showFeedback && guessStreak > 2) {
-      streakScale.value = withTiming(1.1, { duration: 180 });
-      streakOpacity.value = withTiming(1, { duration: 180 });
+    if (streakToastVisible) {
+      streakScale.value = withTiming(1.15, { duration: 180, easing: Easing.out(Easing.elastic(1.2)) });
       setTimeout(() => {
-        streakScale.value = withTiming(1, { duration: 120 });
+        streakScale.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.elastic(1.2)) });
       }, 180);
-      if (Haptics && Haptics.impactAsync) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
     } else {
-      streakOpacity.value = withTiming(0, { duration: 120 });
       streakScale.value = withTiming(0.8, { duration: 120 });
     }
-  }, [showFeedback, guessStreak]);
-  const streakStyle = useAnimatedStyle(() => ({
-    opacity: streakOpacity.value,
+  }, [streakToastVisible]);
+  const streakToastStyle = useAnimatedStyle(() => ({
     transform: [{ scale: streakScale.value }],
   }));
 
@@ -148,6 +144,19 @@ const CardPile: React.FC<CardPileProps> = ({
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.container, animatedStyle]}>
+        {/* Streak Toast Overlay */}
+        {streakToastVisible && (
+          <Animated.View
+            style={[styles.streakToast]}
+            entering={FadeInUp.duration(200).springify().damping(120).mass(0.5).stiffness(200).withInitialValues({ transform: [{ translateY: 8 }] })}
+            exiting={FadeOutUp.duration(300).springify().damping(120).mass(0.5).stiffness(200)}
+            pointerEvents="none"
+          >
+            <Flame size={16} color={COLORS.feedback.error} style={{ marginRight: 4 }} />
+            <Text style={styles.streakToastText}>Streak x{guessStreak}</Text>
+          </Animated.View>
+        )}
+        {/* Feedback Indicator */}
         <View style={styles.feedbackIndicatorContainer}>
           {showFeedback && (
             <FeedbackIndicator
@@ -211,6 +220,30 @@ const styles = StyleSheet.create({
     color: COLORS.text.secondary,
     fontWeight: 'bold',
     fontSize: 14,
+    fontFamily: 'VT323',
+  },
+  streakToast: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -24,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    zIndex: 100,
+    shadowColor: '#111',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  streakToastText: {
+    color: '#111',
+    fontWeight: 'bold',
+    fontSize: 22,
     fontFamily: 'VT323',
   },
 });
