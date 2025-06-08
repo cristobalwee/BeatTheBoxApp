@@ -74,14 +74,16 @@ const CardPile: React.FC<CardPileProps> = ({
   }));
 
   useEffect(() => {
-    const delay = dealDelay * 100;
+    if (isEmptyPile) return;
+
+    const delay = dealDelay * 50;
     translateY.value = withDelay(
       delay,
       withTiming(0, { duration: 300, easing: Easing.out(Easing.back(1.1)) })
     );
     scale.value = withDelay(delay, withTiming(1, { duration: 300 }));
     opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
-  }, [dealDelay]);
+  }, [dealDelay, pile, isEmptyPile]);
 
   // Animate scale up/down on selection
   useEffect(() => {
@@ -133,7 +135,7 @@ const CardPile: React.FC<CardPileProps> = ({
 
   if (isEmptyPile) {
     return (
-      <Animated.View style={[styles.container, animatedStyle]}>
+      <Animated.View style={[styles.container]}>
         <View style={styles.emptyPile} />
       </Animated.View>
     );
@@ -148,8 +150,8 @@ const CardPile: React.FC<CardPileProps> = ({
         {streakToastVisible && (
           <Animated.View
             style={[styles.streakToast]}
-            entering={FadeInUp.duration(200).springify().damping(120).mass(0.5).stiffness(200).withInitialValues({ transform: [{ translateY: 8 }] })}
-            exiting={FadeOutUp.duration(300).springify().damping(120).mass(0.5).stiffness(200)}
+            entering={FadeInUp.duration(200).springify().damping(90).mass(0.5).stiffness(500).withInitialValues({ transform: [{ translateY: 8 }] }).delay(300)}
+            exiting={FadeOutUp.duration(500).springify().damping(120).mass(0.5).stiffness(200).delay(300)}
             pointerEvents="none"
           >
             <Flame size={16} color={COLORS.feedback.error} style={{ marginRight: 4 }} />
@@ -203,29 +205,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  streakPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(200,200,200,0.85)',
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    marginBottom: 2,
-    marginTop: 2,
-    minHeight: 24,
-    minWidth: 60,
-    alignSelf: 'center',
-  },
-  streakText: {
-    color: COLORS.text.secondary,
-    fontWeight: 'bold',
-    fontSize: 14,
-    fontFamily: 'VT323',
-  },
   streakToast: {
     position: 'absolute',
     top: '50%',
-    marginTop: -24,
+    marginTop: -20,
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
@@ -236,14 +219,15 @@ const styles = StyleSheet.create({
     zIndex: 100,
     shadowColor: '#111',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
+    shadowOpacity: 0.6,
     shadowRadius: 12,
     elevation: 6,
+    minWidth: '100%',
   },
   streakToastText: {
     color: '#111',
     fontWeight: 'bold',
-    fontSize: 22,
+    fontSize: 18,
     fontFamily: 'VT323',
   },
 });

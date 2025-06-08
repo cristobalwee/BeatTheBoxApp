@@ -53,16 +53,38 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({ visible, onDismiss }) => {
           <ActivityIndicator color={COLORS.button.primary} />
         ) : (
           <>
-            <Text style={styles.stat}>Games Played: <Text style={styles.value}>{stats.gamesPlayed}</Text></Text>
-            <Text style={styles.stat}>Games Won: <Text style={styles.value}>{stats.gamesWon}</Text></Text>
-            <Text style={styles.stat}>Win %: <Text style={styles.value}>{winPercentage}</Text></Text>
+            <Text style={styles.stat}>Wins: <Text style={styles.value}>{stats.gamesWon} / {stats.gamesPlayed} ({winPercentage}%)</Text></Text>
             <Text style={styles.stat}>Best Piles Remaining: <Text style={styles.value}>{stats.bestPilesRemaining}</Text></Text>
             <Text style={styles.stat}>Longest Win Streak: <Text style={styles.value}>{stats.longestWinStreak}</Text></Text>
             <Text style={styles.stat}>Longest Guess Streak: <Text style={styles.value}>{stats.longestGuessStreak}</Text></Text>
+            <Text style={styles.stat}>High Score: <Text style={styles.value}>{stats.highScore}</Text></Text>
             <Text style={[styles.stat, { marginTop: 16 }]}>Wins by Mode:</Text>
-            <Text style={styles.stat}>Casual: <Text style={styles.value}>{stats.modeStats.casual.gamesWon} / {stats.modeStats.casual.gamesPlayed}</Text> (<Text style={styles.value}>{modeWinPercentage('casual')}</Text>%)</Text>
-            <Text style={styles.stat}>Risky: <Text style={styles.value}>{stats.modeStats.risky.gamesWon} / {stats.modeStats.risky.gamesPlayed}</Text> (<Text style={styles.value}>{modeWinPercentage('risky')}</Text>%)</Text>
-            <Text style={styles.stat}>No Mercy: <Text style={styles.value}>{stats.modeStats.no_mercy.gamesWon} / {stats.modeStats.no_mercy.gamesPlayed}</Text> (<Text style={styles.value}>{modeWinPercentage('no_mercy')}</Text>%)</Text>
+            <View style={styles.modesContainer}>
+              <View style={styles.mode}>
+                <Text style={styles.modeText}>Casual</Text>
+                <Text style={styles.modeSubText}>
+                  <Text>{stats.modeStats.casual.gamesWon} / {stats.modeStats.casual.gamesPlayed}</Text> 
+                  {"\n"}
+                  (<Text>{modeWinPercentage('casual')}</Text>%)
+                </Text>
+              </View>
+              <View style={styles.mode}>
+                <Text style={styles.modeText}>Risky</Text>
+                <Text style={styles.modeSubText}>
+                  <Text>{stats.modeStats.risky.gamesWon} / {stats.modeStats.risky.gamesPlayed}</Text> 
+                  {"\n"}
+                  (<Text>{modeWinPercentage('risky')}</Text>%)
+                </Text>
+              </View>
+              <View style={styles.mode}>
+                <Text style={styles.modeText}>No Mercy</Text>
+                <Text style={styles.modeSubText}>
+                  <Text>{stats.modeStats.no_mercy.gamesWon} / {stats.modeStats.risky.gamesPlayed}</Text> 
+                  {"\n"}
+                  (<Text>{modeWinPercentage('no_mercy')}</Text>%)
+                </Text>
+              </View>
+            </View>
             <Pressable style={styles.resetButton} onPress={handleReset} disabled={resetting}>
               <Text style={styles.resetButtonText}>{resetting ? 'Resetting...' : 'Reset Stats'}</Text>
             </Pressable>
@@ -94,6 +116,32 @@ const styles = StyleSheet.create({
   },
   value: {
     color: COLORS.text.primary,
+    fontWeight: 'bold',
+  },
+  modesContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+  },
+  mode: {
+    flex: 1,
+    paddingVertical: 24,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: COLORS.background,
+  },
+  modeText: {
+    color: COLORS.text.primary,
+    fontSize: 22,
+    fontFamily: 'VT323',
+  },
+  modeSubText: {
+    color: COLORS.text.secondary,
+    fontSize: 22,
+    fontFamily: 'VT323',
+    textAlign: 'center',
     fontWeight: 'bold',
   },
   resetButton: {

@@ -37,4 +37,6 @@ export interface GameContextType {
   lives: number;
   guessStreak: number;
   longestGuessStreak: number;
+  score: number;
+  highScore: number;
 }

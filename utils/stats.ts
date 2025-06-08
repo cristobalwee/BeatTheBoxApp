@@ -10,6 +10,7 @@ export interface UserStats {
   currentWinStreak: number;
   longestGuessStreak: number;
   currentGuessStreak: number;
+  highScore: number;
   modeStats: {
     [mode: string]: {
       gamesPlayed: number;
@@ -21,7 +22,9 @@ export interface UserStats {
 export async function getStats(): Promise<UserStats> {
   const statsString = await AsyncStorage.getItem(STATS_KEY);
   if (statsString) {
-    return JSON.parse(statsString);
+    const parsed = JSON.parse(statsString);
+    if (parsed.highScore === undefined) parsed.highScore = 0;
+    return parsed;
   }
   return {
     gamesPlayed: 0,
@@ -31,6 +34,7 @@ export async function getStats(): Promise<UserStats> {
     currentWinStreak: 0,
     longestGuessStreak: 0,
     currentGuessStreak: 0,
+    highScore: 0,
     modeStats: {
       casual: { gamesPlayed: 0, gamesWon: 0 },
       risky: { gamesPlayed: 0, gamesWon: 0 },
@@ -39,7 +43,7 @@ export async function getStats(): Promise<UserStats> {
   };
 }
 
-export async function updateStatsOnGameEnd(isWin: boolean, pilesRemaining: number, mode: string, guessStreak: number) {
+export async function updateStatsOnGameEnd(isWin: boolean, pilesRemaining: number, mode: string, guessStreak: number, score?: number) {
   const stats = await getStats();
   stats.gamesPlayed += 1;
   stats.modeStats[mode] = stats.modeStats[mode] || { gamesPlayed: 0, gamesWon: 0 };
@@ -62,6 +66,9 @@ export async function updateStatsOnGameEnd(isWin: boolean, pilesRemaining: numbe
     stats.longestGuessStreak = guessStreak;
   }
   stats.currentGuessStreak = 0;
+  if (score !== undefined && score > (stats.highScore || 0)) {
+    stats.highScore = score;
+  }
   await AsyncStorage.setItem(STATS_KEY, JSON.stringify(stats));
 }
 

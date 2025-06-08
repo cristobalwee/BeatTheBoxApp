@@ -20,6 +20,8 @@ const defaultGameContext: GameContextType = {
   lives: 2,
   guessStreak: 0,
   longestGuessStreak: 0,
+  score: 0,
+  highScore: 0,
 };
 
 const GameContext = createContext<GameContextType>(defaultGameContext);
@@ -40,6 +42,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lives, setLives] = useState<number>(2);
   const [guessStreak, setGuessStreak] = useState(0);
   const [longestGuessStreak, setLongestGuessStreak] = useState(0);
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
+
+  // Load high score from stats on mount
+  useEffect(() => {
+    (async () => {
+      const stats = await import('../utils/stats').then(m => m.getStats());
+      setHighScore((await stats).highScore || 0);
+    })();
+  }, []);
 
   // Initialize a new game
   const startNewGame = (newMode?: 'casual' | 'risky' | 'no_mercy') => {
@@ -70,6 +82,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentGuess({ pileIndex: null, guessType: null });
     setGuessStreak(0);
     setLongestGuessStreak(0);
+    setScore(0); // Reset score
     // Optional haptic feedback
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -110,6 +123,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const correct = isGuessCorrect(topCard, drawnCard, guessType);
       setTimeout(() => {
         const newPiles = [...piles];
+        let newScore = score;
         if (correct) {
           newPiles[pileIndex] = {
             ...currentPile,
@@ -118,6 +132,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const newStreak = guessStreak + 1;
           setGuessStreak(newStreak);
           setLongestGuessStreak(prev => (newStreak > prev ? newStreak : prev));
+          // Scoring logic
+          if (newStreak >= 3) {
+            newScore += newStreak * 10;
+          } else {
+            newScore += 10;
+          }
         } else {
           if (lives > 0) {
             setLives(lives - 1);
@@ -135,6 +155,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           setGuessStreak(0);
         }
+        setScore(newScore);
         setPiles(newPiles);
         setDeck(newDeck);
         updateGuessStreak(correct);
@@ -149,10 +170,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const allPilesFlipped = newPiles.every(pile => pile.flipped);
           const deckEmpty = newDeck.length === 0;
           if (allPilesFlipped) {
-            updateStatsOnGameEnd(false, 0, mode, guessStreak);
+            // Game lost, calculate pile penalties
+            let pileScore = 0;
+            newPiles.forEach(pile => {
+              pileScore += pile.flipped ? -10 : 10;
+            });
+            let finalScore = score + pileScore;
+            setScore(finalScore);
+            import('../utils/stats').then(m => m.updateStatsOnGameEnd(false, 0, mode, guessStreak, finalScore));
+            if (finalScore > highScore) setHighScore(finalScore);
             setGameState('lose');
           } else if (deckEmpty) {
-            updateStatsOnGameEnd(true, newPiles.filter(p => !p.flipped).length, mode, guessStreak);
+            // Game won, calculate pile bonuses
+            let pileScore = 0;
+            newPiles.forEach(pile => {
+              pileScore += pile.flipped ? -10 : 10;
+            });
+            let finalScore = score + 100 + pileScore;
+            setScore(finalScore);
+            import('../utils/stats').then(m => m.updateStatsOnGameEnd(true, newPiles.filter(p => !p.flipped).length, mode, guessStreak, finalScore));
+            if (finalScore > highScore) setHighScore(finalScore);
             setGameState('win');
           } else {
             setGameState('playing');
@@ -164,9 +201,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   // Start a new game when the component first mounts
-  useEffect(() => {
-    startNewGame();
-  }, []);
+  // useEffect(() => {
+  //   startNewGame();
+  // }, []);
 
   // Context value
   const value: GameContextType = {
@@ -184,6 +221,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     lives,
     guessStreak,
     longestGuessStreak,
+    score,
+    highScore,
   };
   
   return (

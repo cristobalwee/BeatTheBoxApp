@@ -34,6 +34,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     lives,
     guessStreak,
     longestGuessStreak,
+    score,
+    highScore,
   } = useGameContext();
 
   const [feedbackPileIndex, setFeedbackPileIndex] = useState<number | null>(null);
@@ -59,10 +61,26 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     return { transform: [{ scale: lifeScale.value }] };
   });
 
+  // Animated score counter
+  const scoreScale = useSharedValue(1);
+  const previousScore = React.useRef(score);
+  React.useEffect(() => {
+    if (previousScore.current !== score) {
+      scoreScale.value = withTiming(1.2, { duration: 150 });
+      setTimeout(() => {
+        scoreScale.value = withTiming(1, { duration: 150, easing: Easing.elastic(1.2) });
+      }, 150);
+      previousScore.current = score;
+    }
+  }, [score]);
+  const scoreCounterStyle = useAnimatedStyle(() => {
+    return { transform: [{ scale: scoreScale.value }] };
+  });
+
   React.useEffect(() => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
     let hapticTimeout: ReturnType<typeof setTimeout> | null = null;
-    if (feedbackPileIndex !== null && guessStreak > 3) {
+    if (feedbackPileIndex !== null && guessStreak > 2) {
       setStreakToastValue(guessStreak);
       setShowStreakToast(true);
       hapticTimeout = setTimeout(() => {
@@ -134,7 +152,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
               onGuess={handleGuess}
               isSelected={selectedPileIndex === index}
               dealDelay={index}
-              showFeedback={feedbackPileIndex === index}
+              showFeedback={feedbackPileIndex === index && gameState !== 'idle'}
               feedbackSuccess={feedbackSuccess ?? false}
               guessStreak={feedbackPileIndex === index ? guessStreak : 0}
             />
@@ -150,7 +168,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Image source={require('../assets/images/glove.png')} style={{ width: 28, height: 28, marginRight: 8 }} />
-            <Text style={styles.title}>Score: 0</Text>
+            {/* <Animated.Text style={[styles.title, scoreCounterStyle]}>Score: {score}</Animated.Text> */}
+            <Text style={styles.title}>Score: {score}</Text> 
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16, gap: 4}}>
@@ -162,11 +181,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
             <DeckCounter count={remainingCards} />
           </View>
         </View>
-        
         <View style={styles.boardContainer}>
           {renderPiles()}
         </View>
-        
         <View style={styles.actions}>
           <Pressable
             style={styles.newGameButton}
@@ -174,7 +191,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
           >
             <Text style={styles.buttonText}>New Game</Text>
           </Pressable>
-          
           <View style={styles.buttonContainer}>
             <Pressable onPress={onShowRules} style={styles.tertiaryButton}>
               <CircleHelp size={20} color={COLORS.text.secondary} />
@@ -187,7 +203,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
           </View>
         </View>
       </Pressable>
-
       <ConfirmationModal
         visible={showNewGameConfirm}
         title="Choose Difficulty"
@@ -197,7 +212,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
           startNewGame(mode);
         }}
       />
-
       {(gameState === 'win' || gameState === 'lose') && (
         <GameOverModal
           won={gameState === 'win'}
@@ -205,9 +219,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
           pilesRemaining={piles.filter(p => !p.flipped).length}
           longestGuessStreak={longestGuessStreak}
           cardsRemaining={remainingCards}
+          finalScore={score}
         />
       )}
-
       <StatsOverlay visible={showStatsOverlay} onDismiss={() => setShowStatsOverlay(false)} />
     </View>
   );
@@ -230,6 +244,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.text.primary,
     fontFamily: 'VT323',
+  },
+  highScore: {
+    fontSize: 18,
+    color: COLORS.text.secondary,
+    fontFamily: 'VT323',
+    marginLeft: 12,
+    marginTop: 8,
   },
   boardContainer: {
     flex: 1,
