@@ -13,6 +13,8 @@ import Animated, {
   runOnJS,
   FadeInUp,
   FadeOutUp,
+  FadeIn, 
+  FadeOut
 } from 'react-native-reanimated';
 import { Flame, Heart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -63,37 +65,6 @@ const CardPile: React.FC<CardPileProps> = ({
 
   // --- New Streak Toast Animation ---
   const streakToastVisible = showFeedback && guessStreak > 2 && !showLifeToast;
-  const streakScale = useSharedValue(0.8);
-  const streakOpacity = useSharedValue(0);
-  React.useEffect(() => {
-    if (streakToastVisible || showLifeToast) {
-      if (reduceMotion) {
-        streakOpacity.value = 1;
-      } else {
-        streakScale.value = withTiming(1.15, { duration: 180, easing: Easing.out(Easing.elastic(1.2)) });
-        setTimeout(() => {
-          streakScale.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.elastic(1.2)) });
-        }, 180);
-        streakOpacity.value = withTiming(1, { duration: 120 });
-      }
-    } else {
-      if (reduceMotion) {
-        streakOpacity.value = 0;
-      } else {
-        streakScale.value = withTiming(0.8, { duration: 120 });
-        streakOpacity.value = withTiming(0, { duration: 120 });
-      }
-    }
-  }, [streakToastVisible, showLifeToast, reduceMotion]);
-  const streakToastStyle = useAnimatedStyle(() => {
-    if (reduceMotion) {
-      return { opacity: streakOpacity.value };
-    }
-    return {
-      transform: [{ scale: streakScale.value }],
-      opacity: streakOpacity.value,
-    };
-  });
 
   // --- Deal Animation ---
   React.useEffect(() => {
@@ -196,8 +167,14 @@ const CardPile: React.FC<CardPileProps> = ({
         {showLifeToast && (
           <Animated.View
             style={styles.streakToast}
-            entering={FadeInUp.duration(200).springify().damping(90).mass(0.5).stiffness(500).withInitialValues({ transform: [{ translateY: 8 }] }).delay(300)}
-            exiting={FadeOutUp.duration(500).springify().damping(120).mass(0.5).stiffness(200).delay(300)}
+            entering={ reduceMotion 
+              ? FadeIn.duration(200).delay(300)
+              : FadeInUp.duration(200).springify().damping(90).mass(0.5).stiffness(500).withInitialValues({ transform: [{ translateY: 8 }] }).delay(300)
+            }
+            exiting={ reduceMotion
+              ? FadeOut.duration(200).delay(300)
+              : FadeOutUp.duration(500).springify().damping(120).mass(0.5).stiffness(200).delay(300)
+            }
             pointerEvents="none"
           >
             <Heart size={16} color={COLORS.feedback.success} style={{ marginRight: 6 }} />
@@ -207,7 +184,15 @@ const CardPile: React.FC<CardPileProps> = ({
         {/* Streak Toast Overlay */}
         {streakToastVisible && (
           <Animated.View
-            style={[styles.streakToast, streakToastStyle]}
+            style={[styles.streakToast]}
+            entering={ reduceMotion 
+              ? FadeIn.duration(200).delay(300)
+              : FadeInUp.duration(200).springify().damping(90).mass(0.5).stiffness(500).withInitialValues({ transform: [{ translateY: 8 }] }).delay(300)
+            }
+            exiting={ reduceMotion
+              ? FadeOut.duration(200).delay(300)
+              : FadeOutUp.duration(500).springify().damping(120).mass(0.5).stiffness(200).delay(300)
+            }
             pointerEvents="none"
           >
             <Flame size={16} color={COLORS.feedback.error} style={{ marginRight: 4 }} />
