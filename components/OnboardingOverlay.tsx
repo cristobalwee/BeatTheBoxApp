@@ -33,13 +33,13 @@ const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onDismis
 
           <Text style={styles.sectionTitle}>Difficulty modes:</Text>
           <Text style={styles.paragraph}>
-            <Text style={{ fontWeight: 'bold'}}>Casual</Text> – 1 life. A single mistake is allowed.
+            <Text style={{ fontWeight: 'bold'}}>Casual</Text> – 1 life, take it easy.
           </Text>
           <Text style={styles.paragraph}>
-            <Text style={{ fontWeight: 'bold'}}>Standard</Text> – 0 lives. No mistakes allowed.
+            <Text style={{ fontWeight: 'bold'}}>Standard</Text> – 0 lives, tread lightly.
           </Text>
           <Text style={styles.paragraph}>
-            <Text style={{ fontWeight: 'bold'}}>Brutal</Text> – 0 lives, 2 decks. Twice the challenge.
+            <Text style={{ fontWeight: 'bold'}}>Brutal</Text> – 0 lives, 2 decks, no mercy.
           </Text>
           
           <Text style={styles.sectionTitle}>Rules:</Text>
@@ -53,6 +53,9 @@ const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onDismis
             • If you guess correctly, the card is added to the pile.
           </Text>
           <Text style={styles.paragraph}>
+            • Bonus: guessing the same value correctly gives you 1 extra life.
+          </Text>
+          <Text style={styles.paragraph}>
             • If you guess incorrectly, the pile is flipped over and can no longer be used.
           </Text>
           <Text style={styles.paragraph}>
@@ -61,10 +64,24 @@ const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onDismis
           <Text style={styles.paragraph}>
             • You lose if all piles are flipped over before the deck is empty.
           </Text>
+
+          <Text style={styles.sectionTitle}>Point Scoring:</Text>
+          <Text style={styles.paragraph}>
+            • Every correct guess is +10 points.
+          </Text>
+          <Text style={styles.paragraph}>
+            • After 3 correct guesses, points are multiplied by the length of the streak (i.e +10 x2)
+          </Text>
+          <Text style={styles.paragraph}>
+            • Winning the game gives you +100 points.
+          </Text>
+          <Text style={styles.paragraph}>
+            • Every flipped pile counts for -10 points at the end of each game.
+          </Text>
           
           <Text style={styles.sectionTitle}>Card Values:</Text>
           <Text style={styles.paragraph}>
-            • A (Ace) = 1, 2-10 = face value, J (Jack) = 11, Q (Queen) = 12, K (King) = 13
+            A (Ace) = 1, 2-10 = face value, J (Jack) = 11, Q (Queen) = 12, K (King) = 13
           </Text>
         </View>
         

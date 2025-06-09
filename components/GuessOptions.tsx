@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { GuessType } from '../types/game';
 import { COLORS } from '../constants/colors';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 
 interface GuessOptionsProps {
   onSelect: (guessType: GuessType) => void;
@@ -23,20 +24,26 @@ const BUTTONS = [
 ];
 
 const GuessOptions: React.FC<GuessOptionsProps> = ({ onSelect }) => {
+  const reduceMotion = useReduceMotion();
   // Overlay fade
   const overlayOpacity = useSharedValue(0);
   // Button scales
   const buttonScales = BUTTONS.map(() => useSharedValue(0.9));
 
   React.useEffect(() => {
-    overlayOpacity.value = withTiming(1, { duration: 180 });
-    BUTTONS.forEach((_, i) => {
-      buttonScales[i].value = withDelay(
-        80 * i,
-        withSpring(1, { damping: 12, stiffness: 90 })
-      );
-    });
-  }, []);
+    if (reduceMotion) {
+      overlayOpacity.value = 1;
+      buttonScales.forEach((scale) => (scale.value = 1));
+    } else {
+      overlayOpacity.value = withTiming(1, { duration: 180 });
+      BUTTONS.forEach((_, i) => {
+        buttonScales[i].value = withDelay(
+          80 * i,
+          withSpring(1, { damping: 12, stiffness: 90 })
+        );
+      });
+    }
+  }, [reduceMotion]);
 
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,

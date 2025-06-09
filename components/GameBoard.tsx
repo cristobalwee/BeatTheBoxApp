@@ -14,6 +14,7 @@ import ConfirmationModal from './ConfirmationModal';
 import { isGuessCorrect } from '../utils/card';
 import StatsOverlay from './StatsOverlay';
 import { updateStatsOnGameEnd } from '../utils/stats';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 
 interface GameBoardProps {
   onShowRules: () => void;
@@ -79,6 +80,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     return { transform: [{ scale: scoreScale.value }] };
   });
 
+  const reduceMotion = useReduceMotion();
+
   React.useEffect(() => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
     let hapticTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -131,8 +134,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
       setTimeout(() => {
         setFeedbackPileIndex(null);
         setFeedbackSuccess(null);
-      }, 800);
-    }, 600);
+      }, reduceMotion ? 700 : 800);
+    }, reduceMotion ? 0 : 600);
   };
 
   const handleNewGameConfirm = (won: boolean, pilesRemaining: number) => {

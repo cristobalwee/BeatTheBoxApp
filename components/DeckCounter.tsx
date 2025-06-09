@@ -7,6 +7,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { COLORS } from '../constants/colors';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 
 interface DeckCounterProps {
   count: number;
@@ -16,22 +17,26 @@ interface DeckCounterProps {
 const DeckCounter: React.FC<DeckCounterProps> = ({ count, totalCards = 52 }) => {
   const scale = useSharedValue(1);
   const previousCount = React.useRef(count);
+  const reduceMotion = useReduceMotion();
   
   React.useEffect(() => {
     if (previousCount.current !== count) {
-      // Trigger animation when count changes
-      scale.value = withTiming(1.2, { duration: 150 });
-      
-      setTimeout(() => {
-        scale.value = withTiming(1, { 
-          duration: 150, 
-          easing: Easing.elastic(1.2) 
-        });
-      }, 150);
-      
+      if (reduceMotion) {
+        scale.value = 1;
+      } else {
+        // Trigger animation when count changes
+        scale.value = withTiming(1.2, { duration: 150 });
+        
+        setTimeout(() => {
+          scale.value = withTiming(1, { 
+            duration: 150, 
+            easing: Easing.elastic(1.2) 
+          });
+        }, 150);
+      }
       previousCount.current = count;
     }
-  }, [count]);
+  }, [count, reduceMotion]);
   
   const counterStyle = useAnimatedStyle(() => {
     return {

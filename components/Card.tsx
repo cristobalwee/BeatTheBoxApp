@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Card as CardType, Suit } from '../types/game';
 import { COLORS } from '../constants/colors';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 
 interface CardProps {
   card: CardType;
@@ -66,6 +67,7 @@ const SuitSymbol = ({ suit }: { suit: Suit }) => {
 
 const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComplete }) => {
   const { suit, value, flipped } = card;
+  const reduceMotion = useReduceMotion();
   
   const spin = useSharedValue(flipped ? 180 : 0);
   const bounce = useSharedValue(1);
@@ -77,45 +79,60 @@ const Card: React.FC<CardProps> = ({ card, isDisabled = false, style, onFlipComp
 
   // Sync spin with flipped prop
   React.useEffect(() => {
-    if (flipped) {
-      spin.value = withTiming(180, { duration: 400 });
+    if (reduceMotion) {
+      spin.value = flipped ? 180 : 0;
     } else {
-      spin.value = withTiming(0, { duration: 400 });
+      if (flipped) {
+        spin.value = withTiming(180, { duration: 400 });
+      } else {
+        spin.value = withTiming(0, { duration: 400 });
+      }
     }
-  }, [flipped]);
+  }, [flipped, reduceMotion]);
 
   React.useLayoutEffect(() => {
     if (prevCardRef.current !== card) {
-      dealTranslateY.value = -50;
-      dealOpacity.value = 0;
-      dealTranslateY.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.back(1.1)) });
-      dealOpacity.value = withTiming(1, { duration: 400 });
+      if (reduceMotion) {
+        dealTranslateY.value = 0;
+        dealOpacity.value = 1;
+      } else {
+        dealTranslateY.value = -50;
+        dealOpacity.value = 0;
+        dealTranslateY.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.back(1.1)) });
+        dealOpacity.value = withTiming(1, { duration: 400 });
+      }
     }
-  }, [card, dealTranslateY, dealOpacity]);
+  }, [card, dealTranslateY, dealOpacity, reduceMotion]);
 
   React.useEffect(() => {
-    // If the card identity changes, trigger deal animation
     if (prevCardRef.current !== card) {
       prevCardRef.current = card;
       if (isDisabled) {
-        spin.value = withDelay(
-          1000,
-          withSequence(
-            withTiming(180, { duration: 500 }),
-            withTiming(175, { duration: 200 }),
-            withTiming(185, { duration: 200 }),
-            withTiming(180, { duration: 200 }, (finished) => {
-              if (finished && onFlipComplete) {
-                runOnJS(onFlipComplete)();
-              }
-            })
-          )
-        );
+        if (reduceMotion) {
+          setTimeout(() => {
+            spin.value = 180;
+            if (onFlipComplete) onFlipComplete();
+          }, 800);
+        } else {
+          spin.value = withDelay(
+            1000,
+            withSequence(
+              withTiming(180, { duration: 500 }),
+              withTiming(175, { duration: 200 }),
+              withTiming(185, { duration: 200 }),
+              withTiming(180, { duration: 200 }, (finished) => {
+                if (finished && onFlipComplete) {
+                  runOnJS(onFlipComplete)();
+                }
+              })
+            )
+          );
+        }
       } else {
-        spin.value = 0;
+        spin.value = reduceMotion ? 0 : 0;
       }
     }
-  }, [card, isDisabled]);
+  }, [card, isDisabled, reduceMotion]);
   
   const frontAnimatedStyle = useAnimatedStyle(() => {
     const interpolatedRotate = interpolate(

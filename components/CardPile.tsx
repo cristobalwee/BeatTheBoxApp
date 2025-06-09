@@ -22,6 +22,7 @@ import GuessOptions from './GuessOptions';
 import FeedbackIndicator from './FeedbackIndicator';
 import { Pile, GuessType } from '../types/game';
 import { COLORS } from '../constants/colors';
+import { useReduceMotion } from '../hooks/useReduceMotion';
 
 interface CardPileProps {
   pile: Pile;
@@ -58,45 +59,88 @@ const CardPile: React.FC<CardPileProps> = ({
   // Add scale for selection
   const selectedScale = useSharedValue(1);
 
+  const reduceMotion = useReduceMotion();
+
   // --- New Streak Toast Animation ---
   const streakToastVisible = showFeedback && guessStreak > 2 && !showLifeToast;
   const streakScale = useSharedValue(0.8);
-  useEffect(() => {
+  const streakOpacity = useSharedValue(0);
+  React.useEffect(() => {
     if (streakToastVisible || showLifeToast) {
-      streakScale.value = withTiming(1.15, { duration: 180, easing: Easing.out(Easing.elastic(1.2)) });
-      setTimeout(() => {
-        streakScale.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.elastic(1.2)) });
-      }, 180);
+      if (reduceMotion) {
+        streakOpacity.value = 1;
+      } else {
+        streakScale.value = withTiming(1.15, { duration: 180, easing: Easing.out(Easing.elastic(1.2)) });
+        setTimeout(() => {
+          streakScale.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.elastic(1.2)) });
+        }, 180);
+        streakOpacity.value = withTiming(1, { duration: 120 });
+      }
     } else {
-      streakScale.value = withTiming(0.8, { duration: 120 });
+      if (reduceMotion) {
+        streakOpacity.value = 0;
+      } else {
+        streakScale.value = withTiming(0.8, { duration: 120 });
+        streakOpacity.value = withTiming(0, { duration: 120 });
+      }
     }
-  }, [streakToastVisible, showLifeToast]);
-  const streakToastStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: streakScale.value }],
-  }));
+  }, [streakToastVisible, showLifeToast, reduceMotion]);
+  const streakToastStyle = useAnimatedStyle(() => {
+    if (reduceMotion) {
+      return { opacity: streakOpacity.value };
+    }
+    return {
+      transform: [{ scale: streakScale.value }],
+      opacity: streakOpacity.value,
+    };
+  });
 
-  useEffect(() => {
+  // --- Deal Animation ---
+  React.useEffect(() => {
     if (isEmptyPile) return;
-
     const delay = dealDelay * 50;
-    translateY.value = withDelay(
-      delay,
-      withTiming(0, { duration: 300, easing: Easing.out(Easing.back(1.1)) })
-    );
-    scale.value = withDelay(delay, withTiming(1, { duration: 300 }));
-    opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
-  }, [dealDelay, pile, isEmptyPile]);
-
-  // Animate scale up/down on selection
-  useEffect(() => {
-    if (isSelected) {
-      selectedScale.value = withTiming(1.08, { duration: 180, easing: Easing.out(Easing.cubic) });
+    if (reduceMotion) {
+      translateY.value = 0;
+      scale.value = 1;
+      opacity.value = 1;
     } else {
-      selectedScale.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.cubic) });
+      // Reset to initial state before animating in
+      translateY.value = -20;
+      scale.value = 0.8;
+      opacity.value = 0;
+      translateY.value = withDelay(
+        delay,
+        withTiming(0, { duration: 300, easing: Easing.out(Easing.back(1.1)) })
+      );
+      scale.value = withDelay(delay, withTiming(1, { duration: 300 }));
+      opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
     }
-  }, [isSelected]);
+  }, [dealDelay, pile, isEmptyPile, reduceMotion]);
+
+  // --- Selection Animation ---
+  React.useEffect(() => {
+    if (reduceMotion) {
+      selectedScale.value = isSelected ? 1.08 : 1;
+    } else {
+      if (isSelected) {
+        selectedScale.value = withTiming(1.08, { duration: 180, easing: Easing.out(Easing.cubic) });
+      } else {
+        selectedScale.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.cubic) });
+      }
+    }
+  }, [isSelected, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => {
+    if (reduceMotion) {
+      return {
+        transform: [
+          { translateY: 0 },
+          { scale: isSelected ? 1.08 : 1 },
+        ],
+        opacity: 1,
+        zIndex: isSelected ? 10 : 1,
+      };
+    }
     return {
       transform: [
         { translateY: translateY.value },
@@ -147,7 +191,7 @@ const CardPile: React.FC<CardPileProps> = ({
 
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={[styles.container, animatedStyle]}>
+      <Animated.View style={[styles.container]}>
         {/* Life Toast Overlay (takes precedence over streak) */}
         {showLifeToast && (
           <Animated.View
@@ -164,8 +208,6 @@ const CardPile: React.FC<CardPileProps> = ({
         {streakToastVisible && (
           <Animated.View
             style={[styles.streakToast, streakToastStyle]}
-            entering={FadeInUp.duration(200).springify().damping(90).mass(0.5).stiffness(500).withInitialValues({ transform: [{ translateY: 8 }] }).delay(300)}
-            exiting={FadeOutUp.duration(500).springify().damping(120).mass(0.5).stiffness(200).delay(300)}
             pointerEvents="none"
           >
             <Flame size={16} color={COLORS.feedback.error} style={{ marginRight: 4 }} />
