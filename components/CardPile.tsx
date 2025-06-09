@@ -174,7 +174,7 @@ const CardPile: React.FC<CardPileProps> = ({
             }
             exiting={ reduceMotion
               ? FadeOut.duration(200).delay(300)
-              : FadeOutUp.duration(500).springify().damping(120).mass(0.5).stiffness(200).delay(300)
+              : FadeOutUp.duration(1000).springify().damping(120).mass(0.5).stiffness(200).delay(300)
             }
             pointerEvents="none"
           >
