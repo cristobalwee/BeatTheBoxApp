@@ -17,7 +17,6 @@ import Animated, {
   FadeOut
 } from 'react-native-reanimated';
 import { Flame, Heart } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
 
 import Card from './Card';
 import GuessOptions from './GuessOptions';
@@ -51,7 +50,7 @@ const CardPile: React.FC<CardPileProps> = ({
   guessStreak = 0,
   showLifeToast = false,
 }) => {
-  const { cards, flipped, disabled } = pile;
+  const { cards, disabled } = pile;
   const isEmptyPile = cards.length === 0;
 
   // Animation values
@@ -75,10 +74,12 @@ const CardPile: React.FC<CardPileProps> = ({
       scale.value = 1;
       opacity.value = 1;
     } else {
-      // Reset to initial state before animating in
-      translateY.value = -20;
-      scale.value = 0.8;
-      opacity.value = 0;
+      if (cards.length === 1) {
+        // Reset to initial state before animating in
+        translateY.value = -20;
+        scale.value = 0.8;
+        opacity.value = 0;
+      }
       translateY.value = withDelay(
         delay,
         withTiming(0, { duration: 300, easing: Easing.out(Easing.back(1.1)) })
@@ -89,7 +90,7 @@ const CardPile: React.FC<CardPileProps> = ({
   }, [dealDelay, pile, isEmptyPile, reduceMotion]);
 
   // --- Selection Animation ---
-  React.useEffect(() => {
+  useEffect(() => {
     if (reduceMotion) {
       selectedScale.value = isSelected ? 1.08 : 1;
     } else {
@@ -162,7 +163,7 @@ const CardPile: React.FC<CardPileProps> = ({
 
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={[styles.container]}>
+      <Animated.View style={[styles.container, animatedStyle]}>
         {/* Life Toast Overlay (takes precedence over streak) */}
         {showLifeToast && (
           <Animated.View

@@ -126,20 +126,26 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
       {visible && (
         <PressAnimated 
           style={StyleSheet.absoluteFill}
-          entering={reduceMotion ? undefined : FadeIn.duration(200)}
-          exiting={reduceMotion ? undefined : FadeOut.duration(300)}
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(300)}
           onPress={handleClose}
         >
           <BlurComponent {...blurProps} />
         </PressAnimated>
       )}
-      {reduceMotion ? (
+      <GestureDetector gesture={composedGesture}>
         <Animated.View
           style={[
             styles.bottomSheetContainer,
             { bottom: 0, maxHeight: MAX_SHEET_HEIGHT },
             rBottomSheetStyle,
           ]}
+          onLayout={e => {
+            setSheetHeight(e.nativeEvent.layout.height);
+            if (!visible) {
+              translateY.value = e.nativeEvent.layout.height + insets.bottom;
+            }
+          }}
         >
           {/* Close (X) button */}
           <Pressable
@@ -163,45 +169,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
             {children}
           </AnimatedReanimated.ScrollView>
         </Animated.View>
-      ) : (
-        <GestureDetector gesture={composedGesture}>
-          <Animated.View
-            style={[
-              styles.bottomSheetContainer,
-              { bottom: 0, maxHeight: MAX_SHEET_HEIGHT },
-              rBottomSheetStyle,
-            ]}
-            onLayout={e => {
-              setSheetHeight(e.nativeEvent.layout.height);
-              if (!visible) {
-                translateY.value = e.nativeEvent.layout.height + insets.bottom;
-              }
-            }}
-          >
-            {/* Close (X) button */}
-            <Pressable
-              onPress={handleClose}
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-              style={styles.closeButton}
-              hitSlop={16}
-            >
-              <X color="white" size={20} />
-            </Pressable>
-            <View style={styles.line} />
-            <AnimatedReanimated.ScrollView
-              style={styles.contentContainer}
-              contentContainerStyle={{ paddingBottom: 32 + insets.bottom }}
-              bounces={true}
-              showsVerticalScrollIndicator={false}
-              scrollEventThrottle={16}
-              onScroll={handleScroll}
-            >
-              {children}
-            </AnimatedReanimated.ScrollView>
-          </Animated.View>
-        </GestureDetector>
-      )}
+      </GestureDetector>
     </View>
   );
 };
