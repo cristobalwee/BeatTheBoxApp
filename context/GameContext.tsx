@@ -140,6 +140,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const newStreak = guessStreak + 1;
           setGuessStreak(newStreak);
           setLongestGuessStreak(prev => (newStreak > prev ? newStreak : prev));
+          // Award a life for correct 'same' guess
+          if (guessType === 'same') {
+            setLives(prevLives => prevLives + 1);
+          }
           // Scoring logic
           if (newStreak >= 3) {
             newScore += newStreak * 10;

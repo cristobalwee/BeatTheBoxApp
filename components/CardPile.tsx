@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Image } from 'react-native';
 import {
   GestureDetector,
   Gesture,
@@ -14,7 +14,7 @@ import Animated, {
   FadeInUp,
   FadeOutUp,
 } from 'react-native-reanimated';
-import { Flame } from 'lucide-react-native';
+import { Flame, Heart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 
 import Card from './Card';
@@ -33,6 +33,7 @@ interface CardPileProps {
   showFeedback: boolean;
   feedbackSuccess?: boolean;
   guessStreak?: number;
+  showLifeToast?: boolean;
 }
 
 const CardPile: React.FC<CardPileProps> = ({
@@ -45,6 +46,7 @@ const CardPile: React.FC<CardPileProps> = ({
   showFeedback,
   feedbackSuccess = false,
   guessStreak = 0,
+  showLifeToast = false,
 }) => {
   const { cards, flipped, disabled } = pile;
   const isEmptyPile = cards.length === 0;
@@ -57,10 +59,10 @@ const CardPile: React.FC<CardPileProps> = ({
   const selectedScale = useSharedValue(1);
 
   // --- New Streak Toast Animation ---
-  const streakToastVisible = showFeedback && guessStreak > 2;
+  const streakToastVisible = showFeedback && guessStreak > 2 && !showLifeToast;
   const streakScale = useSharedValue(0.8);
   useEffect(() => {
-    if (streakToastVisible) {
+    if (streakToastVisible || showLifeToast) {
       streakScale.value = withTiming(1.15, { duration: 180, easing: Easing.out(Easing.elastic(1.2)) });
       setTimeout(() => {
         streakScale.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.elastic(1.2)) });
@@ -68,7 +70,7 @@ const CardPile: React.FC<CardPileProps> = ({
     } else {
       streakScale.value = withTiming(0.8, { duration: 120 });
     }
-  }, [streakToastVisible]);
+  }, [streakToastVisible, showLifeToast]);
   const streakToastStyle = useAnimatedStyle(() => ({
     transform: [{ scale: streakScale.value }],
   }));
@@ -146,10 +148,22 @@ const CardPile: React.FC<CardPileProps> = ({
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.container, animatedStyle]}>
+        {/* Life Toast Overlay (takes precedence over streak) */}
+        {showLifeToast && (
+          <Animated.View
+            style={styles.streakToast}
+            entering={FadeInUp.duration(200).springify().damping(90).mass(0.5).stiffness(500).withInitialValues({ transform: [{ translateY: 8 }] }).delay(300)}
+            exiting={FadeOutUp.duration(500).springify().damping(120).mass(0.5).stiffness(200).delay(300)}
+            pointerEvents="none"
+          >
+            <Heart size={16} color={COLORS.feedback.success} style={{ marginRight: 6 }} />
+            <Text style={styles.streakToastText}>+1 life</Text>
+          </Animated.View>
+        )}
         {/* Streak Toast Overlay */}
         {streakToastVisible && (
           <Animated.View
-            style={[styles.streakToast]}
+            style={[styles.streakToast, streakToastStyle]}
             entering={FadeInUp.duration(200).springify().damping(90).mass(0.5).stiffness(500).withInitialValues({ transform: [{ translateY: 8 }] }).delay(300)}
             exiting={FadeOutUp.duration(500).springify().damping(120).mass(0.5).stiffness(200).delay(300)}
             pointerEvents="none"
@@ -222,7 +236,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 12,
     elevation: 6,
-    minWidth: '100%',
   },
   streakToastText: {
     color: '#111',

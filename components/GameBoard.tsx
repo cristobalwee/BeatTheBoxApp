@@ -44,6 +44,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
   const [showStatsOverlay, setShowStatsOverlay] = useState(false);
   const [showStreakToast, setShowStreakToast] = useState(false);
   const [streakToastValue, setStreakToastValue] = useState(0);
+  const [showLifeToast, setShowLifeToast] = useState(false);
+  const [lifeToastKey, setLifeToastKey] = useState(0);
 
   // Animated life counter
   const lifeScale = useSharedValue(1);
@@ -111,6 +113,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     if (topCard && nextCard) {
       isCorrect = isGuessCorrect(topCard, nextCard, guessType);
     }
+    if (isCorrect && guessType === 'same') {
+      setShowLifeToast(true);
+      setLifeToastKey(prev => prev + 1);
+      if (Platform.OS !== 'web') {
+        setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid), 200);
+      }
+      setTimeout(() => setShowLifeToast(false), 2400);
+    }
     makeGuess(pileIndex, guessType);
     setTimeout(() => {
       setFeedbackPileIndex(pileIndex);
@@ -155,6 +165,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
               showFeedback={feedbackPileIndex === index && gameState !== 'idle'}
               feedbackSuccess={feedbackSuccess ?? false}
               guessStreak={feedbackPileIndex === index ? guessStreak : 0}
+              showLifeToast={showLifeToast && feedbackPileIndex === index}
             />
           </View>
         ))}
@@ -318,6 +329,30 @@ const styles = StyleSheet.create({
   },
   backgroundPressable: {
     flex: 1,
+  },
+  lifeToast: {
+    position: 'absolute',
+    top: 24,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    zIndex: 200,
+    shadowColor: '#111',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 8,
+    minWidth: 120,
+  },
+  lifeToastText: {
+    color: '#22C55E',
+    fontWeight: 'bold',
+    fontSize: 18,
+    fontFamily: 'VT323',
   },
 });
 
