@@ -20,7 +20,7 @@ export type Pile = {
 
 export type GameState = 'idle' | 'playing' | 'win' | 'lose' | 'guessing';
 
-export type GameMode = 'casual' | 'risky' | 'no_mercy';
+export type GameMode = 'casual' | 'standard' | 'brutal';
 
 export interface GameContextType {
   piles: Pile[];

@@ -17,7 +17,7 @@ const defaultGameContext: GameContextType = {
   unselectPile: () => {},
   deck: [],
   mode: 'casual',
-  lives: 2,
+  lives: 1,
   guessStreak: 0,
   longestGuessStreak: 0,
   score: 0,
@@ -38,8 +38,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     pileIndex: null,
     guessType: null,
   });
-  const [mode, setMode] = useState<'casual' | 'risky' | 'no_mercy'>('casual');
-  const [lives, setLives] = useState<number>(2);
+  const [mode, setMode] = useState<'casual' | 'standard' | 'brutal'>('casual');
+  const [lives, setLives] = useState<number>(1);
   const [guessStreak, setGuessStreak] = useState(0);
   const [longestGuessStreak, setLongestGuessStreak] = useState(0);
   const [score, setScore] = useState(0);
@@ -54,16 +54,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Initialize a new game
-  const startNewGame = (newMode?: 'casual' | 'risky' | 'no_mercy') => {
+  const startNewGame = (newMode?: 'casual' | 'standard' | 'brutal') => {
     const selectedMode = newMode || mode;
     setMode(selectedMode);
     let initialLives = 0;
-    if (selectedMode === 'casual') initialLives = 2;
-    else if (selectedMode === 'risky') initialLives = 1;
-    else initialLives = 0;
+    let deckCount = 1;
+    if (selectedMode === 'casual') initialLives = 1;
+    else if (selectedMode === 'standard') initialLives = 0;
+    else if (selectedMode === 'brutal') {
+      initialLives = 0;
+      deckCount = 2;
+    }
     setLives(initialLives);
-    // Create and shuffle a new deck
-    const newDeck = shuffleDeck(createDeck());
+    // Create and shuffle a new deck (1 or 2 decks for brutal)
+    let newDeck: Card[] = [];
+    for (let i = 0; i < deckCount; i++) {
+      newDeck = newDeck.concat(createDeck());
+    }
+    newDeck = shuffleDeck(newDeck);
     // Deal 9 cards to start
     const initialPiles: Pile[] = [];
     const remainingDeck: Card[] = [...newDeck];

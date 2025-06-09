@@ -28,22 +28,19 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         {onSelectMode ? (
           <View style={styles.buttonContainer}>
             <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('casual')}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                <Image source={require('../assets/images/heart-outline.png')} style={{ width: 36, height: 36, marginRight: -10 }} />
-                <Image source={require('../assets/images/heart-outline.png')} style={{ width: 36, height: 36, marginLeft: -10 }} />
-              </View>
-              <Text style={styles.buttonText}>Casual</Text>
-              <Text style={styles.buttonSubText}>2 lives</Text>
-            </Pressable>
-            <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('risky')}>
               <Image source={require('../assets/images/heart-outline.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
-              <Text style={styles.buttonText}>Risky</Text>
-              <Text style={styles.buttonSubText}>1 life</Text>
+              <Text style={styles.buttonText}>Casual</Text>
+              <Text style={styles.buttonSubText}>1x life, 1x deck</Text>
             </Pressable>
-            <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('no_mercy')}>
-              <Image source={require('../assets/images/heart-outline-empty.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
-              <Text style={styles.buttonText}>No Mercy</Text>
-              <Text style={styles.buttonSubText}>0 lives</Text>
+            <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('standard')}>
+              <Image source={require('../assets/images/heart-empty.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
+              <Text style={styles.buttonText}>Standard</Text>
+              <Text style={styles.buttonSubText}>0x lives, 1x deck</Text>
+            </Pressable>
+            <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('brutal')}>
+              <Image source={require('../assets/images/skull.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
+              <Text style={styles.buttonText}>Brutal</Text>
+              <Text style={styles.buttonSubText}>0x lives, 2x decks</Text>
             </Pressable>
           </View>
         ) : (
@@ -118,6 +115,7 @@ const styles = StyleSheet.create({
   buttonSubText: {
     color: COLORS.text.secondary,
     fontSize: 16,
+    textAlign: 'center',
   },
   cancelText: {
     color: COLORS.text.secondary,

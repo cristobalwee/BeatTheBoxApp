@@ -33,13 +33,13 @@ const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onDismis
 
           <Text style={styles.sectionTitle}>Difficulty modes:</Text>
           <Text style={styles.paragraph}>
-            <Text style={{ fontWeight: 'bold'}}>Casual</Text> – 2 lives. Plenty of breathing room to learn the ropes.
+            <Text style={{ fontWeight: 'bold'}}>Casual</Text> – 1 life. A single mistake is allowed.
           </Text>
           <Text style={styles.paragraph}>
-            <Text style={{ fontWeight: 'bold'}}>Risky</Text> – 1 life. One mistake, and you’re on thin ice.
+            <Text style={{ fontWeight: 'bold'}}>Standard</Text> – 0 lives. No mistakes allowed.
           </Text>
           <Text style={styles.paragraph}>
-            <Text style={{ fontWeight: 'bold'}}>No mercy</Text> – 0 lives. Every wrong guess flips the pile. Brutal and unforgiving.
+            <Text style={{ fontWeight: 'bold'}}>Brutal</Text> – 0 lives, 2 decks. Twice the challenge.
           </Text>
           
           <Text style={styles.sectionTitle}>Rules:</Text>

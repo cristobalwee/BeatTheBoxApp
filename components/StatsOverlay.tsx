@@ -69,19 +69,19 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({ visible, onDismiss }) => {
                 </Text>
               </View>
               <View style={styles.mode}>
-                <Text style={styles.modeText}>Risky</Text>
+                <Text style={styles.modeText}>Standard</Text>
                 <Text style={styles.modeSubText}>
-                  <Text>{stats.modeStats.risky.gamesWon} / {stats.modeStats.risky.gamesPlayed}</Text> 
+                  <Text>{stats.modeStats.standard.gamesWon} / {stats.modeStats.standard.gamesPlayed}</Text> 
                   {"\n"}
-                  (<Text>{modeWinPercentage('risky')}</Text>%)
+                  (<Text>{modeWinPercentage('standard')}</Text>%)
                 </Text>
               </View>
               <View style={styles.mode}>
-                <Text style={styles.modeText}>No Mercy</Text>
+                <Text style={styles.modeText}>Brutal</Text>
                 <Text style={styles.modeSubText}>
-                  <Text>{stats.modeStats.no_mercy.gamesWon} / {stats.modeStats.risky.gamesPlayed}</Text> 
+                  <Text>{stats.modeStats.brutal.gamesWon} / {stats.modeStats.brutal.gamesPlayed}</Text> 
                   {"\n"}
-                  (<Text>{modeWinPercentage('no_mercy')}</Text>%)
+                  (<Text>{modeWinPercentage('brutal')}</Text>%)
                 </Text>
               </View>
             </View>

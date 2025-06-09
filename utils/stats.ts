@@ -37,8 +37,8 @@ export async function getStats(): Promise<UserStats> {
     highScore: 0,
     modeStats: {
       casual: { gamesPlayed: 0, gamesWon: 0 },
-      risky: { gamesPlayed: 0, gamesWon: 0 },
-      no_mercy: { gamesPlayed: 0, gamesWon: 0 },
+      standard: { gamesPlayed: 0, gamesWon: 0 },
+      brutal: { gamesPlayed: 0, gamesWon: 0 },
     },
   };
 }

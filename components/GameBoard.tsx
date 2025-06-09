@@ -178,7 +178,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
               </Animated.Text>
               <Image source={require('../assets/images/heart.png')} style={{ width: 24, height: 24, marginRight: 4 }} />
             </View>
-            <DeckCounter count={remainingCards} />
+            <DeckCounter count={remainingCards} totalCards={mode === 'brutal' ? 104 : 52} />
           </View>
         </View>
         <View style={styles.boardContainer}>
