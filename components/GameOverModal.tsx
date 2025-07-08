@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Share } from 'react-native';
 import { COLORS } from '../constants/colors';
 import BottomSheet from './BottomSheet';
+import { GameMode } from '../types/game';
 
 interface GameOverModalProps {
   won: boolean;
@@ -10,22 +11,51 @@ interface GameOverModalProps {
   longestGuessStreak: number;
   cardsRemaining: number;
   finalScore: number;
+  mode?: GameMode;
 }
 
-const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame, pilesRemaining, longestGuessStreak, cardsRemaining, finalScore }) => {
+const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame, pilesRemaining, longestGuessStreak, cardsRemaining, finalScore, mode }) => {
   const [isVisible, setVisible] = useState(true);
 
+  const handleShare = async () => {
+    const modeText = mode ? ` (${mode} mode)` : '';
+    let shareMessage: string;
+    let shareTitle: string;
+    
+    if (mode === 'zen') {
+      shareMessage = `🧘 Beat The Box Zen Session${modeText}\n\nFinal Score: ${finalScore}\nLongest Streak: ${longestGuessStreak}\n\nFind your zen with Beat The Box! 🃏`;
+      shareTitle = 'Beat The Box Zen Session';
+    } else if (won) {
+      shareMessage = `🎉 I Beat the Box!${modeText}\n\nFinal Score: ${finalScore}\nLongest Streak: ${longestGuessStreak}\nPiles Remaining: ${pilesRemaining}\n\nCan you beat the box? 🃏`;
+      shareTitle = 'Beat The Box Victory!';
+    } else {
+      shareMessage = `💀 Beat The Box${modeText}\n\nFinal Score: ${finalScore}\nLongest Streak: ${longestGuessStreak}\nCards Remaining: ${cardsRemaining}\n\nTry to beat my score! 🃏`;
+      shareTitle = 'Beat The Box Game Over';
+    }
+
+    try {
+      await Share.share({
+        message: shareMessage,
+        title: shareTitle,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   return (
-    <BottomSheet visible={isVisible} onClose={ () => setVisible(false) } snapPoints={[0.35]}>
+    <BottomSheet visible={isVisible} onClose={ () => setVisible(false) } snapPoints={[0.35]} scrollable={false}>
       <View style={styles.content}>
         <Text style={styles.title}>
-          {won ? 'You Win! 🎉' : 'Game Over'}
+          {mode === 'zen' ? 'Game finished 🧘' : (won ? 'You Win! 🎉' : 'Game Over')}
         </Text>
         
         <Text style={styles.message}>
-          {won 
-            ? "Congratulations! You've successfully beat the box!"
-            : "All piles have been flipped. Better luck next time!"}
+          {mode === 'zen' 
+            ? "You've completed your zen meditation session. Your final score represents your focus and patience."
+            : (won 
+              ? "Congratulations! You've successfully beat the box!"
+              : "All piles have been flipped. Better luck next time!")}
         </Text>
         
         {/* Stats Section - column layout */}
@@ -38,13 +68,15 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ won, onNewGame, pilesRema
             <Text style={styles.statLabel}>Longest Streak</Text>
             <Text style={styles.statValue}>{longestGuessStreak}</Text>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>{won ? 'Piles Remaining' : 'Cards Remaining'}</Text>
-            <Text style={styles.statValue}>{won ? pilesRemaining : cardsRemaining}</Text>
-          </View>
+          {mode !== 'zen' && (
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>{won ? 'Piles Remaining' : 'Cards Remaining'}</Text>
+              <Text style={styles.statValue}>{won ? pilesRemaining : cardsRemaining}</Text>
+            </View>
+          )}
         </View>
-        <Pressable style={styles.button} onPress={onNewGame}>
-          <Text style={styles.buttonText}>New Game</Text>
+        <Pressable style={styles.button} onPress={handleShare}>
+          <Text style={styles.buttonText}>Share Score</Text>
         </Pressable>
       </View>
     </BottomSheet>
@@ -77,6 +109,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     gap: 8,
     width: '100%',
+    flexWrap: 'wrap',
   },
   statBox: {
     backgroundColor: COLORS.background,
@@ -84,8 +117,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
-    marginBottom: 8,
-    maxWidth: '33%',
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 150,
   },
   statLabel: {
     color: COLORS.text.secondary,
@@ -112,6 +146,25 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: COLORS.text.primary,
+    fontSize: 24,
+    width: '100%',
+    fontWeight: 'bold',
+    fontFamily: 'VT323',
+    textAlign: 'center',
+  },
+  closeButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    flexDirection: 'column',
+    width: '100%',
+    marginTop: 8,
+  },
+  closeButtonText: {
+    color: '#FFF',
     fontSize: 24,
     width: '100%',
     fontWeight: 'bold',

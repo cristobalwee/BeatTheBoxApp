@@ -21,7 +21,7 @@ import { Flame, Heart } from 'lucide-react-native';
 import Card from './Card';
 import GuessOptions from './GuessOptions';
 import FeedbackIndicator from './FeedbackIndicator';
-import { Pile, GuessType } from '../types/game';
+import { Pile, GuessType, GameState } from '../types/game';
 import { COLORS } from '../constants/colors';
 import { useReduceMotion } from '../hooks/useReduceMotion';
 
@@ -36,6 +36,7 @@ interface CardPileProps {
   feedbackSuccess?: boolean;
   guessStreak?: number;
   showLifeToast?: boolean;
+  gameState: GameState;
 }
 
 const CardPile: React.FC<CardPileProps> = ({
@@ -49,6 +50,7 @@ const CardPile: React.FC<CardPileProps> = ({
   feedbackSuccess = false,
   guessStreak = 0,
   showLifeToast = false,
+  gameState,
 }) => {
   const { cards, disabled } = pile;
   const isEmptyPile = cards.length === 0;
@@ -130,7 +132,7 @@ const CardPile: React.FC<CardPileProps> = ({
   const tap = Gesture.Tap()
     .maxDistance(10)
     .onEnd(() => {
-      if (!disabled && !isSelected && !isEmptyPile) {
+      if (!disabled && !isSelected && !isEmptyPile && gameState === 'playing') {
         runOnJS(onSelect)(index);
       }
     });
@@ -139,7 +141,7 @@ const CardPile: React.FC<CardPileProps> = ({
   const pan = Gesture.Pan()
     .minDistance(15)
     .onEnd((event) => {
-      if (disabled || isEmptyPile) return;
+      if (disabled || isEmptyPile || gameState !== 'playing') return;
       const translationY = event.translationY;
       if (Math.abs(translationY) > 30) {
         const guess: GuessType = translationY < 0 ? 'higher' : 'lower';

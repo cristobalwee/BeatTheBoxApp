@@ -2,18 +2,24 @@
   "expo": {
     "name": "Beat the Box – card game",
     "slug": "beat-the-box",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#222639"
+    },
     "scheme": "beatthebox",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.grana.beatthebox",
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",
-        "CFBundleDisplayName": "Beat the Box"
+        "CFBundleDisplayName": "Beat the Box",
+        "googleMobileAdsAppId": "ca-app-pub-4969606297904886~5150724012"
       }
     },
     "web": {
@@ -33,6 +39,11 @@
       "router": {},
       "eas": {
         "projectId": "29b3e3fa-8d16-4375-a2b4-8b6d4556ddc0"
+      }
+    },
+    "android": {
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-4969606297904886~3347511713"
       }
     }
   }

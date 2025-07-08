@@ -30,6 +30,7 @@ interface BottomSheetProps {
   onClose: () => void;
   children: React.ReactNode;
   snapPoints?: number[];
+  scrollable?: boolean;
 }
 
 const BottomSheet: React.FC<BottomSheetProps> = ({
@@ -37,15 +38,18 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   onClose,
   children,
   snapPoints = [0.9],
+  scrollable = true,
 }) => {
   const translateY = useSharedValue(10000);
   const active = useSharedValue(false);
   const context = useSharedValue({ y: 0 });
-  const [isAtTop, setIsAtTop] = useState(true);
+  const isAtTop = useSharedValue(true);
+  const isScrolling = useSharedValue(false);
   const [sheetHeight, setSheetHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const HANDLE_HEIGHT = 40;
   const reduceMotion = useReduceMotion();
+  const scrollViewRef = useRef<AnimatedReanimated.ScrollView>(null);
 
   const scrollTo = useCallback((destination: number) => {
     'worklet';
@@ -60,6 +64,10 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   }, [insets.bottom]);
 
   const handleClose = useCallback(() => {
+    // Reset scroll position when closing
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: 0, animated: false });
+    }
     scrollTo(sheetHeight + insets.bottom);
     onClose();
   }, [onClose, scrollTo, sheetHeight, insets.bottom]);
@@ -76,33 +84,69 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     }
   }, [visible, sheetHeight, insets.bottom]);
 
-  // Track scroll position
+  // Track scroll position and scrolling state
   const handleScroll = (event: any) => {
     const offsetY = event.nativeEvent.contentOffset.y;
-    setIsAtTop(offsetY <= 0);
+    isAtTop.value = offsetY <= 0;
   };
+
+  const handleScrollBeginDrag = () => {
+    isScrolling.value = true;
+  };
+
+  const handleScrollEndDrag = () => {
+    // Add a small delay to ensure the scroll state is properly reset
+    setTimeout(() => {
+      isScrolling.value = false;
+    }, 50);
+  };
+
+  // When not scrollable, always allow pan gesture
+  useEffect(() => {
+    if (!scrollable) {
+      isAtTop.value = true;
+      isScrolling.value = false;
+    }
+  }, [scrollable]);
 
   // Native gesture for scroll coordination
   const nativeGesture = Gesture.Native();
   const panGesture = Gesture.Pan()
-    .enabled(isAtTop)
     .onStart(() => {
+      'worklet';
+      // For non-scrollable sheets, always allow pan gesture
+      // For scrollable sheets, only allow if at top and not scrolling
+      if (scrollable && (!isAtTop.value || isScrolling.value)) {
+        return;
+      }
       context.value = { y: translateY.value };
     })
     .onUpdate((event) => {
+      'worklet';
+      // For non-scrollable sheets, always allow pan gesture
+      // For scrollable sheets, only allow if at top and not scrolling
+      if (scrollable && (!isAtTop.value || isScrolling.value)) {
+        return;
+      }
       // Only allow downward movement (positive translationY)
       const nextY = event.translationY + context.value.y;
       // Clamp so it can't go above insets.bottom (no upward drag)
       translateY.value = Math.max(insets.bottom, Math.min(nextY, sheetHeight + insets.bottom));
     })
     .onEnd((event) => {
+      'worklet';
+      // For non-scrollable sheets, always allow pan gesture
+      // For scrollable sheets, only allow if at top and not scrolling
+      if (scrollable && (!isAtTop.value || isScrolling.value)) {
+        return;
+      }
       if (event.velocityY > 500 || event.translationY > (sheetHeight + insets.bottom) * 0.2) {
         runOnJS(handleClose)();
       } else {
         scrollTo(insets.bottom);
       }
     });
-  const composedGesture = Gesture.Simultaneous(panGesture, nativeGesture);
+  const composedGesture = scrollable ? Gesture.Simultaneous(panGesture, nativeGesture) : panGesture;
 
   const rBottomSheetStyle = useAnimatedStyle(() => {
     if (reduceMotion) {
@@ -158,16 +202,27 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
             <X color="white" size={20} />
           </Pressable>
           <View style={styles.line} />
-          <AnimatedReanimated.ScrollView
-            style={styles.contentContainer}
-            contentContainerStyle={{ paddingBottom: 32 + insets.bottom }}
-            bounces={true}
-            showsVerticalScrollIndicator={false}
-            scrollEventThrottle={16}
-            onScroll={handleScroll}
-          >
-            {children}
-          </AnimatedReanimated.ScrollView>
+          {scrollable && (
+            <AnimatedReanimated.ScrollView
+              ref={scrollViewRef}
+              style={styles.contentContainer}
+              contentContainerStyle={{ paddingBottom: 32 + insets.bottom }}
+              bounces={true}
+              showsVerticalScrollIndicator={false}
+              scrollEventThrottle={16}
+              onScroll={handleScroll}
+              onScrollBeginDrag={handleScrollBeginDrag}
+              onScrollEndDrag={handleScrollEndDrag}
+              onMomentumScrollEnd={handleScrollEndDrag}
+            >
+              {children}
+            </AnimatedReanimated.ScrollView>
+          )}
+          {!scrollable && (
+            <View style={[styles.contentContainer, { paddingBottom: 32 + insets.bottom }]}>
+              {children}
+            </View>
+          )}
         </Animated.View>
       </GestureDetector>
     </View>

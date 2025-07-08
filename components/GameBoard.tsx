@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Pressable, Platform, Image } from 'react-native';
 import { CircleHelp, ChartNoAxesColumn, Flame } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, FadeInDown, FadeOutUp } from 'react-native-reanimated';
-
+``
 import { useGameContext } from '../context/GameContext';
 import CardPile from './CardPile';
 import DeckCounter from './DeckCounter';
@@ -15,6 +15,7 @@ import { isGuessCorrect } from '../utils/card';
 import StatsOverlay from './StatsOverlay';
 import { updateStatsOnGameEnd } from '../utils/stats';
 import { useReduceMotion } from '../hooks/useReduceMotion';
+import { initializeAds, loadAd, showAd, incrementGamesPlayed } from '../utils/ads';
 
 interface GameBoardProps {
   onShowRules: () => void;
@@ -30,6 +31,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     selectPile,
     selectedPileIndex,
     unselectPile,
+    endZenGame,
     deck,
     mode,
     lives,
@@ -105,6 +107,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     };
   }, [feedbackPileIndex, guessStreak]);
 
+  useEffect(() => {
+    // Initialize ads when component mounts
+    initializeAds();
+    loadAd();
+  }, []);
+
   const handleGuess = (pileIndex: number, guessType: GuessType) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -138,12 +146,19 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
     }, reduceMotion ? 0 : 600);
   };
 
-  const handleNewGameConfirm = (won: boolean, pilesRemaining: number) => {
+  const handleNewGameConfirm = async (won: boolean, pilesRemaining: number) => {
     updateStatsOnGameEnd(won, pilesRemaining, mode, guessStreak);
     setShowNewGameConfirm(false);
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+
+    // Check if we should show an ad
+    const shouldShowAd = await incrementGamesPlayed();
+    if (shouldShowAd) {
+      await showAd();
+    }
+
     startNewGame();
   };
 
@@ -154,10 +169,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
   };
 
   const renderPiles = () => {
+    const pileCount = piles.length;
+    const gridStyle = pileCount === 4 ? styles.grid2x2 : styles.grid;
+    const pileWrapperStyle = pileCount === 4 ? styles.pileWrapper2x2 : styles.pileWrapper;
+    
     return (
-      <View style={styles.grid}>
+      <View style={gridStyle}>
         {piles.map((pile, index) => (
-          <View key={`pile-${index}`} style={styles.pileWrapper}>
+          <View key={`pile-${index}`} style={pileWrapperStyle}>
             <CardPile
               pile={pile}
               index={index}
@@ -169,6 +188,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
               feedbackSuccess={feedbackSuccess ?? false}
               guessStreak={feedbackPileIndex === index ? guessStreak : 0}
               showLifeToast={showLifeToast && feedbackPileIndex === index}
+              gameState={gameState}
             />
           </View>
         ))}
@@ -188,11 +208,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16, gap: 4}}>
               <Animated.Text style={[{ fontFamily: 'VT323', fontSize: 28, fontWeight: 'bold', color: COLORS.text.primary }, lifeCounterStyle]}>
-                {lives}
+                {mode === 'zen' ? '∞' : lives}
               </Animated.Text>
               <Image source={require('../assets/images/heart.png')} style={{ width: 24, height: 24, marginRight: 4 }} />
             </View>
-            <DeckCounter count={remainingCards} totalCards={mode === 'brutal' ? 104 : 52} />
+            <DeckCounter count={remainingCards} totalCards={52} mode={mode} />
           </View>
         </View>
         <View style={styles.boardContainer}>
@@ -200,10 +220,22 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
         </View>
         <View style={styles.actions}>
           <Pressable
-            style={styles.newGameButton}
-            onPress={() => setShowNewGameConfirm(true)}
+            style={[
+              styles.newGameButton,
+            ]}
+            onPress={() => {
+              if (mode === 'zen' && (gameState === 'playing' || gameState === 'guessing')) {
+                endZenGame();
+              } else {
+                setShowNewGameConfirm(true);
+              }
+            }}
           >
-            <Text style={styles.buttonText}>New Game</Text>
+            <Text style={[
+              styles.buttonText
+            ]}>
+              {mode === 'zen' && (gameState === 'playing' || gameState === 'guessing') ? 'Finish Game' : 'New Game'}
+            </Text>
           </Pressable>
           <View style={styles.buttonContainer}>
             <Pressable onPress={onShowRules} style={styles.tertiaryButton}>
@@ -234,6 +266,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onShowRules }) => {
           longestGuessStreak={longestGuessStreak}
           cardsRemaining={remainingCards}
           finalScore={score}
+          mode={mode}
         />
       )}
       <StatsOverlay visible={showStatsOverlay} onDismiss={() => setShowStatsOverlay(false)} />
@@ -281,10 +314,23 @@ const styles = StyleSheet.create({
     gap: 16,
     aspectRatio: 1,
   },
+  grid2x2: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 24,
+    aspectRatio: 1,
+  },
   pileWrapper: {
     width: '30%',
     height: '40%',
     maxHeight: 280,
+  },
+  pileWrapper2x2: {
+    width: '40%',
+    height: '55%',
+    maxHeight: 380,
   },
   actions: {
     paddingHorizontal: 24,
@@ -306,10 +352,29 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  endGameButton: {
+    backgroundColor: '#DC2626',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   buttonText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text.primary,
+    fontFamily: 'VT323',
+  },
+  endGameButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     fontFamily: 'VT323',
   },
   tertiaryButton: {

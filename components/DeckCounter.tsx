@@ -8,13 +8,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { COLORS } from '../constants/colors';
 import { useReduceMotion } from '../hooks/useReduceMotion';
+import { GameMode } from '../types/game';
 
 interface DeckCounterProps {
   count: number;
   totalCards?: number;
+  mode?: GameMode;
 }
 
-const DeckCounter: React.FC<DeckCounterProps> = ({ count, totalCards = 52 }) => {
+const DeckCounter: React.FC<DeckCounterProps> = ({ count, totalCards = 52, mode }) => {
   const scale = useSharedValue(1);
   const previousCount = React.useRef(count);
   const reduceMotion = useReduceMotion();
@@ -47,7 +49,7 @@ const DeckCounter: React.FC<DeckCounterProps> = ({ count, totalCards = 52 }) => 
   return (
     <View style={styles.container}>
       <Animated.Text style={[styles.counter, counterStyle]}>
-        {count}
+        {mode === 'zen' ? '∞' : count}
       </Animated.Text>
       <View style={styles.deckIcon}>
         <View style={styles.card1} />

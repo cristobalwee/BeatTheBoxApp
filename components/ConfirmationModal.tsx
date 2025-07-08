@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Text, Pressable, Image } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { Heart, HeartOff, Skull, Sprout } from 'lucide-react-native';
 import { COLORS } from '../constants/colors';
 import BottomSheet from './BottomSheet';
 import { GameMode } from '../types/game';
@@ -22,25 +23,30 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onSelectMode,
 }) => {
   return (
-    <BottomSheet visible={visible} onClose={onCancel || (() => {})} snapPoints={[0.4]}>
+    <BottomSheet visible={visible} onClose={onCancel || (() => {})} snapPoints={[0.4]} scrollable={false}>
       <View style={styles.content}>
         <Text style={styles.title}>{title}</Text>
         {onSelectMode ? (
           <View style={styles.buttonContainer}>
             <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('casual')}>
-              <Image source={require('../assets/images/heart-outline.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
+              <Heart size={30} color={COLORS.text.primary} style={{ marginBottom: 8 }} />
               <Text style={styles.buttonText}>Casual</Text>
-              <Text style={styles.buttonSubText}>1x life, 1x deck</Text>
+              <Text style={styles.buttonSubText}>2 lives, you can take it easy</Text>
             </Pressable>
             <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('standard')}>
-              <Image source={require('../assets/images/heart-empty.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
+              <HeartOff size={30} color={COLORS.text.primary} style={{ marginBottom: 8 }} />
               <Text style={styles.buttonText}>Standard</Text>
-              <Text style={styles.buttonSubText}>0x lives, 1x deck</Text>
+              <Text style={styles.buttonSubText}>No lives, every guess counts</Text>
             </Pressable>
             <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('brutal')}>
-              <Image source={require('../assets/images/skull.png')} style={{ width: 36, height: 36, marginBottom: 8 }} />
+              <Skull size={30} color={COLORS.text.primary} style={{ marginBottom: 8 }} />
               <Text style={styles.buttonText}>Brutal</Text>
-              <Text style={styles.buttonSubText}>0x lives, 2x decks</Text>
+              <Text style={styles.buttonSubText}>No lives, 4 piles – be careful!</Text>
+            </Pressable>
+            <Pressable style={[styles.button, styles.confirmButton]} onPress={() => onSelectMode('zen')}>
+              <Sprout size={30} color={COLORS.text.primary} style={{ marginBottom: 8 }} />
+              <Text style={styles.buttonText}>Zen</Text>
+              <Text style={styles.buttonSubText}>Endless lives, endless cards</Text>
             </Pressable>
           </View>
         ) : (
@@ -90,13 +96,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     width: '100%',
+    flexWrap: 'wrap',
   },
   button: {
     flex: 1,
     paddingVertical: 24,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
+    minWidth: 150,
+    flexGrow: 1,
+    flexShrink: 1,
     gap: 4
   },
   confirmButton: {

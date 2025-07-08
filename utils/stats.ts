@@ -13,6 +13,7 @@ export interface UserStats {
   longestGuessStreak: number;
   currentGuessStreak: number;
   highScore: number;
+  zenModeHighScore: number;
   modeStats: {
     [mode: string]: {
       gamesPlayed: number;
@@ -32,10 +33,12 @@ function getDefaultStats(): UserStats {
     longestGuessStreak: 0,
     currentGuessStreak: 0,
     highScore: 0,
+    zenModeHighScore: 0,
     modeStats: {
       casual: { gamesPlayed: 0, gamesWon: 0 },
       standard: { gamesPlayed: 0, gamesWon: 0 },
       brutal: { gamesPlayed: 0, gamesWon: 0 },
+      zen: { gamesPlayed: 0, gamesWon: 0 },
     },
   };
 }
@@ -51,11 +54,15 @@ export async function getStats(): Promise<UserStats> {
       stats = { ...stats, ...parsed };
       // Ensure all modeStats exist
       stats.modeStats = stats.modeStats || {};
-      ['casual', 'standard', 'brutal'].forEach(mode => {
+      ['casual', 'standard', 'brutal', 'zen'].forEach(mode => {
         if (!stats.modeStats[mode]) {
           stats.modeStats[mode] = { gamesPlayed: 0, gamesWon: 0 };
         }
       });
+      // Ensure zenModeHighScore exists (for users with older stats)
+      if (stats.zenModeHighScore === undefined) {
+        stats.zenModeHighScore = 0;
+      }
       // Add any other migration logic here if you change the structure in the future
       // Update version if missing or outdated
       if (!stats.version || stats.version < STATS_VERSION) {
@@ -77,9 +84,23 @@ export async function getStats(): Promise<UserStats> {
 
 export async function updateStatsOnGameEnd(isWin: boolean, pilesRemaining: number, mode: string, guessStreak: number, score?: number) {
   const stats = await getStats();
+  
+  // For zen mode, don't count as a game played or win
+  if (mode === 'zen') {
+    // Only update zen mode high score if provided
+    if (score !== undefined && score > (stats.zenModeHighScore || 0)) {
+      stats.zenModeHighScore = score;
+    }
+    // Don't update any other stats for zen mode
+    await AsyncStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    return;
+  }
+  
+  // Regular mode logic (non-zen modes)
   stats.gamesPlayed += 1;
   stats.modeStats[mode] = stats.modeStats[mode] || { gamesPlayed: 0, gamesWon: 0 };
   stats.modeStats[mode].gamesPlayed += 1;
+  
   if (isWin) {
     stats.gamesWon += 1;
     stats.modeStats[mode].gamesWon += 1;
@@ -93,15 +114,26 @@ export async function updateStatsOnGameEnd(isWin: boolean, pilesRemaining: numbe
   } else {
     stats.currentWinStreak = 0;
   }
-  // Guess streaks
+  // Update regular high score for non-zen modes
+  if (score !== undefined && score > (stats.highScore || 0)) {
+    stats.highScore = score;
+  }
+  
+  // Guess streaks (track for all modes)
   if (guessStreak > stats.longestGuessStreak) {
     stats.longestGuessStreak = guessStreak;
   }
   stats.currentGuessStreak = 0;
-  if (score !== undefined && score > (stats.highScore || 0)) {
-    stats.highScore = score;
-  }
+  
   await AsyncStorage.setItem(STATS_KEY, JSON.stringify(stats));
+}
+
+export async function updateZenModeHighScore(score: number) {
+  const stats = await getStats();
+  if (score > (stats.zenModeHighScore || 0)) {
+    stats.zenModeHighScore = score;
+    await AsyncStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  }
 }
 
 export async function updateGuessStreak(isCorrect: boolean) {

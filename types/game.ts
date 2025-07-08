@@ -20,7 +20,7 @@ export type Pile = {
 
 export type GameState = 'idle' | 'playing' | 'win' | 'lose' | 'guessing';
 
-export type GameMode = 'casual' | 'standard' | 'brutal';
+export type GameMode = 'casual' | 'standard' | 'brutal' | 'zen';
 
 export interface GameContextType {
   piles: Pile[];
@@ -32,6 +32,7 @@ export interface GameContextType {
   makeGuess: (pileIndex: number, guessType: GuessType) => void;
   selectPile: (pileIndex: number) => void;
   unselectPile: () => void;
+  endZenGame: () => void;
   deck: Card[];
   mode: GameMode;
   lives: number;
@@ -39,4 +40,5 @@ export interface GameContextType {
   longestGuessStreak: number;
   score: number;
   highScore: number;
+  zenModeHighScore: number;
 }

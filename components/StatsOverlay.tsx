@@ -46,7 +46,7 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({ visible, onDismiss }) => {
   };
 
   return (
-    <BottomSheet visible={visible} onClose={onDismiss} snapPoints={[0.65]}>
+    <BottomSheet visible={visible} onClose={onDismiss} snapPoints={[0.65]} scrollable={false}>
       <View style={styles.container}>
         <Text style={styles.title}>Your Stats</Text>
         {loading || !stats ? (
@@ -58,6 +58,7 @@ const StatsOverlay: React.FC<StatsOverlayProps> = ({ visible, onDismiss }) => {
             <Text style={styles.stat}>Longest Win Streak: <Text style={styles.value}>{stats.longestWinStreak}</Text></Text>
             <Text style={styles.stat}>Longest Guess Streak: <Text style={styles.value}>{stats.longestGuessStreak}</Text></Text>
             <Text style={styles.stat}>High Score: <Text style={styles.value}>{stats.highScore}</Text></Text>
+            <Text style={styles.stat}>Zen Mode High Score: <Text style={styles.value}>{stats.zenModeHighScore || 0}</Text></Text>
             <Text style={[styles.stat, { marginTop: 16 }]}>Wins by Mode:</Text>
             <View style={styles.modesContainer}>
               <View style={styles.mode}>
